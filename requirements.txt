@@ -2,4 +2,4 @@ Flask==1.0.2
 Flask-Testing==0.7.1
 SQLAlchemy==1.2.14
 pysqlite3==0.2.0
-
+python-dotenv==0.9.1
