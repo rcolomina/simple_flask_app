@@ -21,6 +21,12 @@ import json
 import werkzeug
 import sqlalchemy
 
+from aux_functions import output_not_found
+from aux_functions import output_bad_request
+from aux_functions import check_email_reg_exp
+from aux_functions import get_data_from_dict
+from aux_functions import string_on_extracted_data
+
 #from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy import create_engine
@@ -50,6 +56,9 @@ engine                  = create_engine(sqlalchemy_database_uri, convert_unicode
 DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
 db_session              = scoped_session(DBSession)
 
+##########################
+# INITIALIZING DATA BASE #
+##########################
 @app.before_first_request
 def setup():
     print("debug: setup app")
@@ -57,132 +66,67 @@ def setup():
     #Base.metadata.drop_all(bind=engine)
     Base.query = db_session.query_property()
     Base.metadata.create_all(bind=engine)
-    print("debug:",engine)
-    
-# Define Api representation
+    #print("debug:",engine)
+
+###############################
+# DEFINING API REPRESENTATION #
+###############################
 @api.representation('application/json')
 def jsonify_output(data, status_code=200, headers=None, indent=4):
     print("debug:outputting in json format with status code "+str(status_code))
-    print("hello data",data)
+    #print("hello data",data)
     resp = make_response(json.dumps(data,indent=indent), status_code)
     resp.headers['Content-Type'] = 'application/json; charset=utf-8'
     resp.headers['mimetype'] = 'application/json'
     resp.status_code = status_code
-    print(resp.__dict__)
     return resp
 
-# Define error handler for a bad request
+###########################
+# DEFINING ERROR HANDLERS #
+###########################
 @app.errorhandler(405)
 def method_not_allowed(e):
     return jsonify_output({"status":405,
-                           "message":"HTTP Method not Allowed for Request."},405)
+                           "message":Config.MSG_HTTP_INVALID},405)
 @app.errorhandler(404)
 def resource_not_found(e):
     return jsonify_output({"status":404,
-                           "message":"Resource Not Found or Not Available"},404)    
+                           "message":Config.MSG_RESOURCE_NOT_FOUND},404)    
 @app.errorhandler(500)
 def internal_server_error(e):
     return jsonify_output({"status":500,
-                           "message":"INTERNAL SERVER ERROR."},500)    
+                           "message":Config.MSG_INTERNAL_ERROR},500)    
                           
-@app.errorhandler(Exception) #werkzeug.exceptions)
+@app.errorhandler(Exception) 
 def handle_error(error):
-    print(type(error))
+    #print(type(error))
     
     if isinstance(error,werkzeug.exceptions.MethodNotAllowed):
         return jsonify_output({"status":405,
-                               "message":"HTTP Method not Allowed for Request."},405)
+                               "message":Config.MSG_HTTP_INVALID},405)
 
     if isinstance(error,werkzeug.exceptions.NotFound):
         return jsonify_output({"status":404,
-                               "message":"Resource Not Found or Not Available"},404)    
+                               "message":Config.MSG_RESOURCE_NOT_FOUND},404)    
 
     if isinstance(error,sqlalchemy.exc.IntegrityError):
         return jsonify_output({"status":400,
-                               "message":"INTEGRITY ERROR Duplicated Index or Null Key was provided."},400)
+                               "message":Config.MSG_INTEGRITY_ERROR},400)
 
     # Anything else
     return jsonify_output({"status":500,
-                           "message":"INTERNAL SERVER ERROR."},500)    
+                           "message":Config.MSG_INTERNAL_ERROR},500)    
 
-
+######################
+## SHUTTING DOWN APP #
+######################
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
 
-########################
-# DEFINE FLASK ROUTES
-########################
-
-# Not Found message configured
-def output_not_found(username):
-    message = "NOT FOUND Contact with username '"+username+"' was not found in the database."
-    status = 404
-    data = {"message":message,"status":status}
-    return jsonify_output(data,status)
-
-# Return Bad Request message configured
-def output_bad_request(message):
-    print("debug: output_bad_request")
-    status = 400
-    data = {"message":"BAD REQUEST "+message,"status":status}
-    return jsonify_output(data,status)
-
-
-def check_email_reg_exp(email):
-    ''' Check whether email follows regular expression'''
-    import re
-    # If email is passed check regular expresion
-    regexp="^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$"
-    if email != None and isinstance(email,str):
-        if re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$",email):
-            return True
-    return False
-    
-def get_data_from_dict(mydict):
-    ''' Return a tuple with the information required to build a contact '''
-    print('debug: get_data_from_dict')    
-    
-    validKeys = ['username','email','firstname','surname']
-    insersec  = [value for value in validKeys if value in mydict.keys()]
-    if insersec != validKeys:
-        return "INVALID_KEYS"
-
-    username  = mydict['username']
-    if username == None:
-        return "NULL_KEY_ID"
-
-    email     = mydict['email']                
-    if not check_email_reg_exp(email):
-        return "INVALID_EMAIL"
-
-    print("hello")
-    
-    firstname = mydict['firstname']
-    surname   = mydict['surname']
-
-    # Create contact
-    return (username,email,firstname,surname)
-    
-
-def string_on_extracted_data(extractData):
-    print("debug: check extracted data")
-    if isinstance(extractData,str):
-        print("Extracted data is wrong")
-        msg = "BAD DATA"
-        if extractData == "USERNAME_NOT_IN_DATA":
-            msg = "Username Primary Key NOT provided in Data Body JSON request."
-        if extractData == "INVALID_KEYS":
-            msg = "Invalid Keys in Data JSON request."
-        if extractData == "NULL_KEY_ID":
-            msg = "Null Primary Key was provided in Data JSON request."            
-        if extractData == "INVALID_EMAIL":
-            msg = "Invalid email"
-
-        return (True,msg)
-    else:
-        print("Extracted data is good")
-        return (False,"OK")
+#########################
+# DEFINING FLASK ROUTES #
+#########################
     
 # This receives only POST method using json
 @app.route('/contact/',methods=['POST'])
@@ -196,16 +140,19 @@ def post_contact():
         otherwise return non JSON format '''
         mydict = request.get_json()  
     except:
-        return output_bad_request("Data is not in JSON format.")
+        data,status = output_bad_request(Config.MSG_BAD_DATA_FORMAT)
+        return jsonify_output(data,status)
 
     if mydict == {}:
-        return output_bad_request("Void JSON was given provided.")
+        data,status = output_bad_request(MSG_VOID_DATA_JSON)
+        return jsonify_output(data,status)
     
     extractData = get_data_from_dict(mydict)
-    badData,msg = string_on_extracted_data(extractData)    
-    print(badData,msg)
-    if badData:
-        return output_bad_request(msg)
+    isBadData,message = string_on_extracted_data(extractData)    
+    #print(badData,msg)
+    if isBadData:
+        data,status = output_bad_request(message)
+        return jsonify_output(data,status)
         
     # Add new contact to db
     db_session.add(Contact(extractData[0],
@@ -215,8 +162,8 @@ def post_contact():
     db_session.commit()
 
     # Return OK message
-    message ="OK New Contact With Username '"+extractData[0]+"' Added into the Database."
-    status = 200
+    message = Config.MSG_OK_CONTACT_INSERT+" ( Username = "+extractData[0]+" )"
+    status  = 200
     data = {"message":message,"status":status}
     return jsonify_output(data,status)
     
@@ -232,7 +179,9 @@ def get_all_contact():
             listOfContacts.append(query.toDict())
 
         status = 200 
-        data = {"status":status,"contacts":listOfContacts}     
+        data = {"status":status,
+                "message":Config.MSG_OK_ALL_CONTACT_RET,
+                "contacts":listOfContacts}     
         return jsonify_output(data, status)    
     else:
         abort(404)
@@ -241,15 +190,21 @@ def get_all_contact():
 def get_single_contact(username):
     print('debug: get_single_contact')
     # Querying contact matching username
-    #print(db_session.__dict__)
     
     myQueryContact = Contact.query.filter(Contact.username == username).first()    
-
+    #print("*******",myQueryContact,username)
     if myQueryContact != None:
         status = 200
-        return jsonify_output(myQueryContact.toDict(),status)
+        data = {"status":status,
+                "message":Config.MSG_OK_CONTACT_RET,
+                "contacts":myQueryContact.toDict()}     
+        
+        return jsonify_output(data, status)
     else:
-        return output_not_found(username)
+        #print("not found")
+        #print(output_not_found(username))
+        data,status = output_not_found(username)
+        return jsonify_output(data, status)
 
 @app.route('/contact/<username>',methods=['PUT'])
 def update_single_contact(username):
@@ -265,14 +220,17 @@ def update_single_contact(username):
             mydict = request.get_json()
             mydict['username'] = username
         except:
-            return output_bad_request("Data not given in JSON format.")
+            data,status = output_bad_request(Config.MSG_BAD_DATA_FORMAT)
+            return jsonify_output(data, status)
 
-        print(mydict)
+        #print(mydict)
         
         extractData = get_data_from_dict(mydict)
-        badData,msg = string_on_extracted_data(extractData)
-        if badData:
-            return output_bad_request(msg)
+        isBadData,message = string_on_extracted_data(extractData)
+        #print(badData,message)
+        if isBadData:
+            data,status = output_bad_request(message)
+            return jsonify_output(data, status)
                 
         myQueryContact.email     = extractData[1]
         myQueryContact.firstname = extractData[2]
@@ -280,7 +238,7 @@ def update_single_contact(username):
 
         db_session.commit()
 
-        message ="OK Contact was updated in the database."
+        message = Config.MSG_OK_CONTACT_UPDATED
         status = 201
         data = {"message":message,"status":status,
                 "contact_updated":{"username":username,
@@ -290,7 +248,8 @@ def update_single_contact(username):
         
         return jsonify_output(data,status)
     else:
-        return output_not_found(username)
+        data,status = output_not_found(username)
+        return jsonify_output(data,status)
 
 
 
@@ -311,12 +270,13 @@ def delete_single_contact(username):
         myQuery.delete()
         db_session.commit()
 
-        message ="DELETE Contact from database."
+        message = Config.MSG_DEL_CONTACT
         status = 200
         data = {"message":message,"status":status}
         return jsonify_output(data,status)
     else:
-        return output_not_found(username)
+        data,status = output_not_found(username)
+        return jsonify_output(data,status) #output_not_found(username))
 
 
 

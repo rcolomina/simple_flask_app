@@ -1,14 +1,11 @@
 import os
 import Flask as flask
-#from Flask import setup_sqlalchemy_database_uri 
 import unittest
 import tempfile
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-
-
 
 ##  Operation                              ## Test Cases                    ## Expected status code
 #   Non supported                          GET  method '/' URI                        404
@@ -50,11 +47,13 @@ class FlaskTestCase(unittest.TestCase):
     def test_unavailable_resource(self):
         rv = self.app.get('/')        
         assert rv._status == '404 NOT FOUND'
-        assert rv._status_code == 404
-
+        assert rv.get_json()['status'] == 404
+        assert rv.get_json()['message'] == "Resource Not Found or Not Available."
+        
         rv = self.app.get('/contact/nonavailable/resource')
-        assert rv._status_code == 404
+        assert rv.get_json()['status'] == 404
         assert rv._status == '404 NOT FOUND'
+        assert rv.get_json()['message'] == "Resource Not Found or Not Available."
         
     def test_post(self):
         print("Testing: POST method with single user")
@@ -63,26 +62,28 @@ class FlaskTestCase(unittest.TestCase):
                                  "email":"smith@gmail.com",
                                  "firstname":"Jonh",
                                  "surname":"Smith"})
-        
-        json_data = rv.get_json()
-        assert json_data['message'] == "OK New Contact With Username 'smith1' Added into the Database."
+
+        assert rv.get_json()['message'] == "Contact inserted succesfully in the database. ( Username = smith1 )"
+        assert rv.get_json()['status'] == 200
         
         print("Testing: POST when data has missing non null argument")
         rv = self.app.post('/contact/',
-                           json={"username":"smith1",
+                           json={"username":"smithd1",
                                  "email":"smith@gmail.com",
                                  "firstname":"Jonh"})
-        assert rv._status_code == 400
+        #print(get_json()['status'])
+        assert rv.get_json()['status'] == 400
 
         print("Testing: POST when existing username")
         rv = self.app.post('/contact/',
                            json={"username":"smith1",
                                  "email":"smith@gmail.com",
-                                 "firstname":"Jonh","surname":"Smith"})
+                                 "firstname":"Jonh",
+                                 "surname":"Smith"})
         json_data = rv.get_json()
-        print(json_data)
-        assert json_data['message'] == "INTEGRITY ERROR Duplicated Index or Null Key was provided."
-        assert rv._status_code == 400
+        #print(json_data)
+        assert json_data['message'] == "Integrity Error due to Duplicated Index or Null Key was provided."
+        assert rv.get_json()['status'] == 400
 
         
 
@@ -97,12 +98,14 @@ class FlaskTestCase(unittest.TestCase):
 
         print("Testing: GET contact by username")
         rv = self.app.get('/contact/smithdsa1')
-        assert rv._status_code == 200
-
+        assert rv.get_json()['status'] == 200        
+        assert rv.get_json()['message'] == "Specific Contact retrieved succesfully from the database."
+        
         print("Testing: Get Single Contact by missing Username")
         rv = self.app.get('/contact/smithdsa1dasds')
-        assert rv._status_code == 404
-
+        assert rv.get_json()['status'] == 404
+        assert rv.get_json()['message'] == "Contant Not Found in database. Username 'smithdsa1dasds' does not exist."
+        
     def test_get_all(self):
         # Insert a contact to have something in the database
         print("Testing: Get All Contacts")
@@ -115,16 +118,16 @@ class FlaskTestCase(unittest.TestCase):
         
         rv = self.app.get('/contact/')
         json_data = rv.get_json()
-        #print(json_data)
+
         assert json_data["contacts"][0]["username"]  == 'smithdsa1'
         assert json_data["contacts"][0]["email"]     == 'smith@gmail.com'
         assert json_data["contacts"][0]["firstname"] == 'Jonh'
         assert json_data["contacts"][0]["surname"]   == 'Smith'
          
-        assert rv._status_code == 200
+        assert rv.get_json()['status'] == 200
               
     def test_delete_user(self):
-        print("Testing DELETE a User")
+        print("Testing: Delete a User")
         
         rv = self.app.post('/contact/',
                            json={"username":"smith",
@@ -140,22 +143,21 @@ class FlaskTestCase(unittest.TestCase):
 
         
         rv = self.app.delete('/contact/smith')
-        assert rv._status_code == 200
-        assert rv.get_json()["message"] == "DELETE Contact from database."
+        assert rv.get_json()['status'] == 200
+        assert rv.get_json()["message"] == "Contact deleted from the database."
         
         rv = self.app.delete('/contact/beaton')
-        assert rv._status_code == 200
-        assert rv.get_json()["message"] == "DELETE Contact from database."
+        assert rv.get_json()['status'] == 200
+        assert rv.get_json()["message"] == "Contact deleted from the database."
         
         print("Testing: Get deleted contact by username")
         rv = self.app.get('/contact/smith')
-        assert rv._status_code == 404
-        assert rv.get_json()["message"] == "NOT FOUND Contact with username 'smith' was not found in the database."
+        assert rv.get_json()['status'] == 404        
+        assert rv.get_json()["message"] == "Contant Not Found in database. Username 'smith' does not exist."
         
         rv = self.app.delete('/contact/smithd')
-        assert rv._status_code == 404
-        assert rv.get_json()["message"] == "NOT FOUND Contact with username 'smithd' was not found in the database."
-
+        assert rv.get_json()['status'] == 404        
+        assert rv.get_json()["message"] == "Contant Not Found in database. Username 'smithd' does not exist."
 
 
     def test_method_not_allowed(self):
@@ -166,11 +168,9 @@ class FlaskTestCase(unittest.TestCase):
                                  "email":"hbeaton@gmail.com",
                                  "firstname":"Henry",
                                  "surname":"Beaton"})
+        assert rv.get_json()['status'] == 405
+        assert rv.get_json()["message"] == "HTTP Method was Not Allowed for the Request."
 
-        print(rv.__dict__)
-        #json_data = rv.get_json()["message"] 
-
-    #def test_updated_iser(self):
             
 if __name__ == '__main__':
     unittest.main()
