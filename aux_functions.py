@@ -42,10 +42,11 @@ def get_data_from_dict(mydict):
     if username == None:
         return Config.NULL_KEY_ID
 
+    # Here extract multiple emails (one or more)
     email     = mydict['email']                
-    if not check_email_reg_exp(email):
-        return Config.INVALID_EMAIL
-
+    #if not check_email_reg_exp(email):
+    #    return Config.INVALID_EMAIL
+        
     firstname = mydict['firstname']
     surname   = mydict['surname']
 
@@ -55,14 +56,13 @@ def get_data_from_dict(mydict):
       
 def string_on_extracted_data(extractData):
     ''' Determine whether extracted data is good or bad'''
-    print("debug: check extracted data")
-
+    print("debug: string_on_extracted_data")
+    print(extractData)
     if isinstance(extractData,str):
         print("debug: Extracted data is wrong")
         msg = Config.BAD_DATA
         if extractData == Config.INVALID_USERNAME:
             msg = Config.MSG_INVALID_USERNAME
-
         if extractData == Config.INVALID_KEYS:
             msg = Config.MSG_INVALID_KEYS 
         if extractData == Config.NULL_KEY_ID:
@@ -70,8 +70,8 @@ def string_on_extracted_data(extractData):
         if extractData == Config.INVALID_EMAIL:
             msg = Config.MSG_INVALID_EMAIL
 
-
+        print(msg)    
         return (True,msg)
     else:
-
+        print("OK")
         return (False,"OK")

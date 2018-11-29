@@ -1,7 +1,13 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
+#from sqlalchemy.dialects.postgresql import ARRAY,JSONB
 
 Base = declarative_base()
+
+#class CastingArray(ARRAY):
+#    __tablename__ = 'a'
+#    def bind_expression(self, bindvalue):
+#        return sa.cast(bindvalue,self)
 
 class Contact(Base):
     __tablename__ = 'contacts'
@@ -34,6 +40,9 @@ class Contact(Base):
 
 
 
-
 #class Email(Base):
-#    __tablename__ =
+#    __tablename__ = 'emails'
+#    id       = Column(Integer, primary_key=True)
+#    email    = Column(String, nullable=False)
+#    owner_id = Column(Integer, ForeigKey('contact.id')
+#    owner    = relationship(Contact, back_populates="emails") 
