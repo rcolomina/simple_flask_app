@@ -42,6 +42,7 @@ from config import Config
 app.config['SQLALCHEMY_DATABASE_URI']        = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 
+
 # Create API from this app
 api = Api(app)
 
@@ -52,7 +53,7 @@ api = Api(app)
 
 ## CREATE ENGINE and SESSION using the declarative way
 sqlalchemy_database_uri = app.config['SQLALCHEMY_DATABASE_URI']
-engine                  = create_engine(sqlalchemy_database_uri, convert_unicode=True)
+engine                  = create_engine(sqlalchemy_database_uri, convert_unicode=True,echo='debug')
 DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
 db_session              = scoped_session(DBSession)
 
@@ -63,8 +64,12 @@ db_session              = scoped_session(DBSession)
 def setup():
     print("debug: setup app")
     # Binding Base Model class to the engine
+
+    # TODO drop all from configuration
     #Base.metadata.drop_all(bind=engine)
+
     Base.query = db_session.query_property()
+    # Create Tables
     Base.metadata.create_all(bind=engine)
     #print("debug:",engine)
 
@@ -148,18 +153,31 @@ def post_contact():
         return jsonify_output(data,status)
     
     extractData = get_data_from_dict(mydict)
+    
     isBadData,message = string_on_extracted_data(extractData)    
-    #print(badData,msg)
+    print("****",isBadData)
     if isBadData:
         data,status = output_bad_request(message)
         return jsonify_output(data,status)
-        
+
+    print("try to create new contact created ok")    
+    new_contact = Contact(extractData[0],
+                          extractData[1],
+                          extractData[2],
+                          extractData[3])
+    print("new contact created ok")
+    print(new_contact)
+    #for email in emails:
+    #    new_email = Email(owner=new_contact)
+    #    new_contact.add(new_email)
+    
     # Add new contact to db
-    db_session.add(Contact(extractData[0],
-                           extractData[1],
-                           extractData[2],
-                           extractData[3]))
+    db_session.add(new_contact)
+
+    print("new contact added")
     db_session.commit()
+
+    print("db session commited")
 
     # Return OK message
     message = Config.MSG_OK_CONTACT_INSERT+" ( Username = "+extractData[0]+" )"
@@ -227,7 +245,8 @@ def update_single_contact(username):
         
         extractData = get_data_from_dict(mydict)
         isBadData,message = string_on_extracted_data(extractData)
-        #print(badData,message)
+        print("****",isBadData)
+        print(isBadData,message)
         if isBadData:
             data,status = output_bad_request(message)
             return jsonify_output(data, status)
