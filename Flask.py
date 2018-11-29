@@ -137,47 +137,42 @@ def shutdown_session(exception=None):
 @app.route('/contact/',methods=['POST'])
 def post_contact():
     print("debug: post_contact")
-
+    
     mydict={}
     try:
         ''' This functions only is used from POST and PUT routes
         This shoud try to get JSON content from request data
         otherwise return non JSON format '''
+        print(request.__dict__)
         mydict = request.get_json()  
     except:
         data,status = output_bad_request(Config.MSG_BAD_DATA_FORMAT)
         return jsonify_output(data,status)
 
+    #print("debug:",mydict)
     if mydict == {}:
-        data,status = output_bad_request(MSG_VOID_DATA_JSON)
+        data,status = output_bad_request(Config.MSG_VOID_DATA_JSON)
         return jsonify_output(data,status)
     
     extractData = get_data_from_dict(mydict)
     
     isBadData,message = string_on_extracted_data(extractData)    
-    print("****",isBadData)
+
     if isBadData:
         data,status = output_bad_request(message)
         return jsonify_output(data,status)
 
-    print("try to create new contact created ok")    
+    print("debug: try to create new contact created ok")    
     new_contact = Contact(extractData[0],
                           extractData[1],
                           extractData[2],
                           extractData[3])
-    print("new contact created ok")
-    print(new_contact)
-    #for email in emails:
-    #    new_email = Email(owner=new_contact)
-    #    new_contact.add(new_email)
+    print("debug: new contact created ok")
     
     # Add new contact to db
     db_session.add(new_contact)
-
-    print("new contact added")
     db_session.commit()
-
-    print("db session commited")
+    print("debug: data commited OK")
 
     # Return OK message
     message = Config.MSG_OK_CONTACT_INSERT+" ( Username = "+extractData[0]+" )"
@@ -240,12 +235,10 @@ def update_single_contact(username):
         except:
             data,status = output_bad_request(Config.MSG_BAD_DATA_FORMAT)
             return jsonify_output(data, status)
-
-        #print(mydict)
         
         extractData = get_data_from_dict(mydict)
         isBadData,message = string_on_extracted_data(extractData)
-        print("****",isBadData)
+        #print("****",isBadData)
         print(isBadData,message)
         if isBadData:
             data,status = output_bad_request(message)
@@ -294,8 +287,8 @@ def delete_single_contact(username):
         data = {"message":message,"status":status}
         return jsonify_output(data,status)
     else:
-        data,status = output_not_found(username)
-        return jsonify_output(data,status) #output_not_found(username))
+        data,status = output_not_found(username)    
+        return jsonify_output(data,status)
 
 
 
