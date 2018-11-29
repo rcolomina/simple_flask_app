@@ -43,15 +43,46 @@ def get_data_from_dict(mydict):
         return Config.NULL_KEY_ID
 
     # Here extract multiple emails (one or more)
-    email     = mydict['email']                
-    #if not check_email_reg_exp(email):
-    #    return Config.INVALID_EMAIL
+    list_emails  = mydict['email']
+
+    print(list_emails)
+    
+    #print("debug:",email)
+    # Check whether email content is a list
+    # e.g.:  ['jonhsmith@gmail.com','jonhsmith@hotmail.com','jsmiths@ibm.com']
+    # Convert list into string "email1|email2|...|emailn"
+    # Check emails are correct accross them
+
+    # Check that emails come in a list
+    if not isinstance(list_emails,list):
+        #Check whether is a single string
+        if not isinstance(list_emails,str):                
+            return Config.INVALID_EMAIL
+        else:
+            if not check_email_reg_exp(list_emails):
+                return Config.INVALID_EMAIL
+        print(list_emails)
+            
+    else:
+        print(list_emails)
+
+        for email in list_emails:
+            if not isinstance(email,str):        
+                return Config.INVALID_EMAIL
+            if not check_email_reg_exp(email):
+                return Config.INVALID_EMAIL
+            print("debug: post reg exp:",email)
+        print(list_emails)
+        list_emails = "|".join(list_emails)
         
+        print(list_emails)
+
     firstname = mydict['firstname']
     surname   = mydict['surname']
 
+    print(list_emails)
     # Create tuple with the inputs to update or insert a new contact
-    return (username,email,firstname,surname)
+    return (username,list_emails,firstname,surname)
 
       
 def string_on_extracted_data(extractData):
