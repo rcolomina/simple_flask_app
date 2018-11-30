@@ -2,7 +2,7 @@
 
 This is simple Flask App using best practices and reusable code including unit testing. This is a simple app to register in a database contacts datails.
 
-RESTfull architecture rules have been followed using JSON as interchagable format. Its specifications for its database were SQLAlchemy plus Sqlite3 as backend. 
+RESTfull architecture rules have been followed using JSON as interchagable format. Its specifications for its database have have SQLAlchemy with Sqlite3 as backend. 
 
 ## Download the project folder
 
@@ -38,6 +38,130 @@ $ source env/bin/activate
 
 $ pip install -r requirements.txt
 
+### Running the Application
+
+$ ./env_flask.sh
+
+At this moment you should open another terminal to launch HTTP commands againts the application. The database of this execution will be created in the project folder.
+
+The application will run in the flask defaul IP and PORT (configuration not implemented yet)
+
+```
+127.0.0.1:5000
+```
+
+# App Configuration File
+
+This configuration file contains parameters such as FLASK IP and PORT, SQLALCHEMY and SQLITE name and its location.
+
+Also it is possible to configure the regular expression which will parse the emails passed within the contact details.
+
+Additionaly it is possible to configure output messages that are returned by HTTP responses. You can modify these to other language for instance.
+
+# Flask API Usage
+
+This is a RESTful API based on interchange of JSON formats. Its HTTP operations are in the section below.
+
+### HTTP Methods and URL availables
+
+HTTP methodss along with URL allow different  operation to perform againts the database. These are as follows:
+
+```
+Method  URL                     Operation
+------  ----------------------  -----------------------------------------
+POST    /contact/               Insert a new contact in the data base
+PUT     /contact/<username>     Update a contact with specific username
+GET     /contact/               Returns all contacts in the data base
+GET     /contact/<username>     Returns a contact with specific username
+GET     /contact/email/<email>  Returns all contacts with specific email
+DELETE  /contact/<username>     Delete a contact with specific username
+```
+
+You can also see the routes available from the application running the command:
+
+$ flask routes
+
+So you will get the following ones
+
+```
+Endpoint               Methods  Rule
+---------------------  -------  -----------------------
+delete_single_contact  DELETE   /contact/<username>
+get_all_contact        GET      /contact/
+get_contacts_by_email  GET      /contact/email/<email>
+get_single_contact     GET      /contact/<username>
+post_contact           POST     /contact/
+static                 GET      /static/<path:filename>
+update_single_contact  PUT      /contact/<username>
+```
+
+### Data Format
+
+JSON format is the only format used on this API. To POST and PUT JSON content Data must be prepared.  As follows you can see an example as schema for posting a contact with multiple emails.
+
+```
+{"username":"fbolson",
+"email":["frodobolson@mordor.com","fbolson@earth.com"],
+"firstname":"Frodo",
+"surname":"BolsonCerrado"}"
+```
+
+Notice that email admits list of emails. "email" contact can be either a string or a list of strings. The format of each email is checked againts a regular expresion specified in the configuration file having the following string:
+
+```
+^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$
+```
+
+# Testing Flask API
+
+This API can be tested using the python unit test module or via shell script which use curl command. 
+
+## Python Unit Test 
+
+The standard python module unittest has been used to execute HTTP operations againts the app. An independent temporal database is created for this purpose in the temporal folder.
+
+Local temporal sqlite database: 
+
+```
+sqlite:////tmp/flask_unittest.db
+```
+
+Multiple assertions over the app source code accross different HTTP methods are verified by the module 'flask_test.py' based on python unittest.
+
+To run all of these test within the previous module firstly verify you have loaded your python environment.
+
+$ source env/bin/activate
+
+Launch all the test inside the app testing module
+
+$ python flask_test.py
+
+## CURL testing
+
+Also you can also run them separately by HTTP method depending on the purpose:
+
+```
+$ python -m unittest -q flask_test.FlaskTestCase.test_unavailable_resource
+$ python -m unittest -q flask_test.FlaskTestCase.test_method_not_allowed
+$ python -m unittest -q flask_test.FlaskTestCase.test_post
+$ python -m unittest -q flask_test.FlaskTestCase.test_get_username
+$ python -m unittest -q flask_test.FlaskTestCase.test_get_by_username
+$ python -m unittest -q flask_test.FlaskTestCase.test_get_all
+$ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
+$ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
+```
+
+Additionaly curl library can also be used to test this app. Taylored scripts are available for this.
+
+You should launch your app first of all:
+
+$ ./env_flask.sh
+
+Now you can launch commands to it with curl. As example you can POST a contact as follows:
+
+$ ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
+
+
 ## App Data Base Model
 
 The data base model contains two related tables one to many.
@@ -60,93 +184,7 @@ The specificatoins for the database on this app are SQL ALchemy plus SQLITE3.
 
 SQL Alchemy is an API for databases allowing abstractions on SQL, which means that all the entities and relationships among tables on your database are handled by python classes. Therefor the programmer does not have to worry about sql embbeded code. This uses sqlite3 which has limitations but it is good enough for the purpose of the app.
 
-# Flask API Usage
-
-This is a RESTful API based on JSON format. See its HTTP operations below.
-
-## POST Method for to include a new Contact and Email
-
-To post (insert) a new contact use the following URI and data in JSON format:
-
-### URIs availables
-
-Method  URL                  Operation
-
-------
-
-POST '/contact/'             Insert a new contact in the data base
-
-PUT  '/contact/<username>'   Update a contact with specific username
-
-GET  '/contact/'             Returns all contacts in the data base
-
-GET  '/contact/<username>'   Returns a contact with specific username
- 
-GET  '/contact/email/<email>' Returns all contacts with specific email
-
-DELETE '/contact/<username>' Delete a contact with specific username
-
-### Data Format
-
-JSON format is used to POST and PUT content Data. As an example to do data posting:
-
-```
-{"username":"fbolson",
-"email":["frodobolson@mordor.com","fbolson@earth.com"],
-"firstname":"Frodo",
-"surname":"BolsonCerrado"}"
-```
-
-Notice that email admits list of emails. "email" contact can be either a string or a list of strings. The format of each email is checked with the regular expresion as follows:
-
-```
-^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$
-```
-
-# Testing Flask API
-
-## Python Unit test 
-
-You would need python unittest library to execute off-line testing on HTTP operations. An independent temporal database is created in the temporal folder
-
-Local temporal sqlite database: 
-
-'sqlite:////tmp/flask_unittest.db'
-
-Multiple assertions over the app source code accross different HTTP methods are verified by the module 'flask_test.py' based on python unittest.
-
-To run all of these test within the previous module firstly verify you have loaded your python environment.
-
-$ source env/bin/activate
-
-Launch all the test inside the app testing module
-
-$ python flask_test.py
-
-## CURL testing
-
-Also you can also run them separately by HTTP method depending on the purpose:
-
-$ python -m unittest -q flask_test.FlaskTestCase.test_unavailable_resource
-$ python -m unittest -q flask_test.FlaskTestCase.test_method_not_allowed
-$ python -m unittest -q flask_test.FlaskTestCase.test_post
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_username
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_by_username
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_all
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
-
-Additionaly curl library can also be used to test this app. Taylored scripts are available for this.
-
-You should launch your app first of all:
-
-$ ./env_flask.sh
-
-Now you can launch commands to it with curl. As example you can POST a contact as follows:
-
-$ ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
-
-
+# Celery Testing
 
 
 # Authors
