@@ -20,7 +20,6 @@ from aux_functions import check_email_reg_exp
 from aux_functions import get_data_from_dict
 from aux_functions import string_on_extracted_data
 from aux_functions import check_email_reg_exp
-
 from config import Config
 
 # Initialize Flask Application
@@ -35,7 +34,7 @@ api = Api(app)
 
 ## CREATE ENGINE and SESSION using the declarative way
 sqlalchemy_database_uri = app.config['SQLALCHEMY_DATABASE_URI']
-engine                  = create_engine(sqlalchemy_database_uri, convert_unicode=True,echo='debug')
+engine                  = create_engine(sqlalchemy_database_uri,convert_unicode=True,echo='debug')
 DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
 db_session              = scoped_session(DBSession)
 
@@ -58,11 +57,12 @@ db_session              = scoped_session(DBSession)
 @app.before_first_request
 def setup():
     print("debug: setup app")
+    # Drop all tables 
+    if Config.DROP_ALL_TABLES_ON_START:
+        Base.metadata.drop_all(bind=engine)
+
     # Binding Base Model class to the engine
-    # TODO: Activate drop all from configuration
-    #Base.metadata.drop_all(bind=engine)
     Base.query = db_session.query_property()
-    # Create Tables
     Base.metadata.create_all(bind=engine)
 
 ###############################
@@ -137,39 +137,38 @@ def post_contact():
         data,status = output_bad_request(Config.MSG_BAD_DATA_FORMAT)
         return jsonify_output(data,status)
 
-    #print("debug:",mydict)
     if mydict == {}:
         data,status = output_bad_request(Config.MSG_VOID_DATA_JSON)
         return jsonify_output(data,status)
     
-    extractData = get_data_from_dict(mydict)    
+    extractData = get_data_from_dict(mydict)
+
     isBadData,message = string_on_extracted_data(extractData)    
     if isBadData:
         data,status = output_bad_request(message)
         return jsonify_output(data,status)
 
-    print("debug: try to create new contact created ok")    
-    new_contact = Contact(extractData[0],
+    username = extractData[0]    
+    new_contact = Contact(username,
                           extractData[1],
                           extractData[2],
                           extractData[3])
 
     # Append list emails on its table
     for email in extractData[1].split("|"):
-        new_email = Email(extractData[0],email)
+        new_email = Email(username,email)
         db_session.add(new_email)
-    
+
     # Add new contact to db
     db_session.add(new_contact)
     db_session.commit()
 
     # Return OK message
-    message = Config.MSG_OK_CONTACT_INSERT+" ( Username = "+extractData[0]+" )"
+    message = Config.MSG_OK_CONTACT_INSERT+" ( Username = "+username+" )"
     status  = 200
     data = {"message":message,"status":status}
     return jsonify_output(data,status)
     
-
 @app.route('/contact/',methods=['GET']) 
 def get_all_contact():
     # Querying contact matching username
@@ -202,7 +201,7 @@ def get_single_contact(username):
         status = 200
         data = {"status":status,
                 "message":Config.MSG_OK_CONTACT_RET,
-                "contacts":contactDict}     
+                "contact":contactDict}     
         
         return jsonify_output(data, status)
     else:
@@ -223,18 +222,19 @@ def get_contacts_by_email(email):
     # Querying usernames by incoming emails
     myQueryEmails = Email.query.filter(Email.email == email).all()
 
-    print(myQueryEmails)
+    #print(myQueryEmails)
     if myQueryEmails == []:
         message = Config.MSG_DATA_NOT_FOUND
         status = 404
-        data = {"status":status,"message":message}
+        data = {"status":status,
+                "message":message}
         return jsonify_output(data,status)
 
         
     listContactsWithEmail=[]
     for queryEmail in myQueryEmails:
         username = queryEmail.username
-        print("debug username:",username)
+        #print("debug username:",username)
         myQueryContact = Contact.query.filter(Contact.username == username).first()
         myDictQueryContact = myQueryContact.toDict()
         myDictQueryContact["email"] = myDictQueryContact["email"].split('|')
@@ -242,7 +242,9 @@ def get_contacts_by_email(email):
         
     message = Config.MSG_OK_CONTACT_BY_EMAIL
     status = 201
-    data = {"status":status,"message":message,"email":email,
+    data = {"status":status,
+            "message":message,
+            "email":email,
             "contacts":listContactsWithEmail}
         
     return jsonify_output(data,status)
@@ -306,7 +308,7 @@ def update_single_contact(username):
 @app.route('/contact/<username>',methods=['DELETE'])
 def delete_single_contact(username):
     print("debug: Deleting single contact")
-    print("debug: URI username:",username)
+    #print("debug: URI username:",username)
 
     queryContact = Contact.query.filter(Contact.username == username).first()
     if queryContact != None:
