@@ -1,20 +1,10 @@
 # Simple Flask APP to Register Contact Details
 
-This is simple Flask App using best practices and reusable code including unit testing. This is a simple app to register in a database contacts datails.
-
-RESTfull architecture rules have been followed using JSON as interchagable format. Its specifications for its database have have SQLAlchemy with Sqlite3 as backend. 
-
-## Download the project folder
-
-To download this project you will need git to clone it on your machine.
-
-$ git clone https://github.com/rcolomina/simple_flask_app
-
-$ cd simple_flask_app
+This is simple RESTfull Flask App to register contact details in a database. JSON is the only interchagable format. 
 
 ## Installation
 
-This requires python3 and pip to install its dependencies.
+This requires python3 and pip to install its dependencies from requirements.txt.
 
 ### Install python3
 
@@ -32,7 +22,7 @@ $ python3 -m venv testing_env
 
 ### Activate your virtual environment
 
-$ source env/bin/activate
+$ source testing_env/bin/activate
 
 ### Install dependencies Using PIP
 
@@ -130,13 +120,11 @@ Multiple assertions over the app source code accross different HTTP methods are 
 
 To run all of these test within the previous module firstly verify you have loaded your python environment.
 
-$ source env/bin/activate
+$ source testing_env/bin/activate
 
 Launch all the test inside the app testing module
 
 $ python flask_test.py
-
-## CURL testing
 
 Also you can also run them separately by HTTP method depending on the purpose:
 
@@ -151,6 +139,8 @@ $ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
 $ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
 ```
 
+## CURL testing
+
 Additionaly curl library can also be used to test this app. Taylored scripts are available for this.
 
 You should launch your app first of all:
@@ -164,17 +154,21 @@ $ ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
 
 ## App Data Base Model
 
-The data base model contains two related tables one to many.
+The data base model contains two related tables with a relationship one to many.
 
-A first one named 'contacts' which contains:
+A first table named 'contacts' which contains:
 
+```
 Contact(id, username, email, firstname, surname)
+```
 
 The field 'username' is the primary key. Fields 'email', 'firstname' and 'surname' were defined as non nullable.
 
 A second table named 'emails' which is a child from the first one contains:
 
+```
 Email(id, username, email)
+```
 
 The filed 'username' in 'emails' table is a foreigh key of 'contacts'.
 
