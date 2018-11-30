@@ -46,7 +46,9 @@ $ flask run
 
 Alternatively there is a script which launch these three commands of above for you
 
+```
 $ ./env_flask.sh
+```
 
 The application will run on the default Flask IP and PORT
 
@@ -89,7 +91,9 @@ DELETE  /contact/<username>     Delete a contact with specific username
 
 You can also see the routes available from the application running the command:
 
+```
 $ flask routes
+```
 
 So you will get the following ones
 
@@ -140,12 +144,13 @@ Multiple assertions over the app source code accross different HTTP methods are 
 
 To run all of these test within the previous module firstly verify you have loaded your python environment.
 
+```
 $ source testing_env/bin/activate
-
+```
 Launch all the test inside the app testing module
-
+```
 $ python flask_test.py
-
+```
 Also you can also run them separately by HTTP method depending on the purpose:
 
 ```
@@ -164,13 +169,13 @@ $ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
 Additionaly curl library can also be used to test this app. Taylored scripts are available for this.
 
 You should launch your app first of all:
-
+```
 $ ./env_flask.sh
-
+```
 Now you can launch commands to it with curl. As example you can POST a contact as follows:
-
+```
 $ ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
-
+```
 
 ## App Data Base Model
 
