@@ -18,7 +18,7 @@ def output_bad_request(message):
     return data,status
 
 def check_email_reg_exp(email):
-    print("debug: check email reg exp")
+    print("debug: checking email regular expression on "+email)
     ''' Check whether email follows a regular expression'''
     import re
     # If email is passed check regular expresion
@@ -45,9 +45,6 @@ def get_data_from_dict(mydict):
     # Here extract multiple emails (one or more)
     list_emails  = mydict['email']
 
-    print(list_emails)
-    
-    #print("debug:",email)
     # Check whether email content is a list
     # e.g.:  ['jonhsmith@gmail.com','jonhsmith@hotmail.com','jsmiths@ibm.com']
     # Convert list into string "email1|email2|...|emailn"
@@ -61,26 +58,22 @@ def get_data_from_dict(mydict):
         else:
             if not check_email_reg_exp(list_emails):
                 return Config.INVALID_EMAIL
-        print(list_emails)
+
             
     else:
-        print(list_emails)
+
 
         for email in list_emails:
             if not isinstance(email,str):        
                 return Config.INVALID_EMAIL
             if not check_email_reg_exp(email):
                 return Config.INVALID_EMAIL
-            print("debug: post reg exp:",email)
-        print(list_emails)
+
         list_emails = "|".join(list_emails)
         
-        print(list_emails)
-
     firstname = mydict['firstname']
     surname   = mydict['surname']
 
-    print(list_emails)
     # Create tuple with the inputs to update or insert a new contact
     return (username,list_emails,firstname,surname)
 
@@ -88,9 +81,9 @@ def get_data_from_dict(mydict):
 def string_on_extracted_data(extractData):
     ''' Determine whether extracted data is good or bad'''
     print("debug: string_on_extracted_data")
-    print(extractData)
+
     if isinstance(extractData,str):
-        print("debug: Extracted data is wrong")
+
         msg = Config.BAD_DATA
         if extractData == Config.INVALID_USERNAME:
             msg = Config.MSG_INVALID_USERNAME
@@ -101,8 +94,9 @@ def string_on_extracted_data(extractData):
         if extractData == Config.INVALID_EMAIL:
             msg = Config.MSG_INVALID_EMAIL
 
-        print(msg)    
+
         return (True,msg)
     else:
-        print("OK")
         return (False,"OK")
+
+
