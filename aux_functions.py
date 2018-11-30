@@ -1,4 +1,3 @@
-
 from config import Config
 
 # Not Found message configured
@@ -18,7 +17,7 @@ def output_bad_request(message):
     return data,status
 
 def check_email_reg_exp(email):
-    print("debug: checking email regular expression on "+email)
+    print("debug: checking email regular expression on " + email)
     ''' Check whether email follows a regular expression'''
     import re
     # If email is passed check regular expresion
@@ -57,12 +56,8 @@ def get_data_from_dict(mydict):
             return Config.INVALID_EMAIL
         else:
             if not check_email_reg_exp(list_emails):
-                return Config.INVALID_EMAIL
-
-            
+                return Config.INVALID_EMAIL            
     else:
-
-
         for email in list_emails:
             if not isinstance(email,str):        
                 return Config.INVALID_EMAIL
@@ -70,20 +65,18 @@ def get_data_from_dict(mydict):
                 return Config.INVALID_EMAIL
 
         list_emails = "|".join(list_emails)
-        
+
+
     firstname = mydict['firstname']
     surname   = mydict['surname']
 
     # Create tuple with the inputs to update or insert a new contact
     return (username,list_emails,firstname,surname)
-
       
 def string_on_extracted_data(extractData):
     ''' Determine whether extracted data is good or bad'''
     print("debug: string_on_extracted_data")
-
     if isinstance(extractData,str):
-
         msg = Config.BAD_DATA
         if extractData == Config.INVALID_USERNAME:
             msg = Config.MSG_INVALID_USERNAME
@@ -93,8 +86,6 @@ def string_on_extracted_data(extractData):
             msg = Config.MSG_NULL_KEY_ID
         if extractData == Config.INVALID_EMAIL:
             msg = Config.MSG_INVALID_EMAIL
-
-
         return (True,msg)
     else:
         return (False,"OK")
