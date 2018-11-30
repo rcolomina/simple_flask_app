@@ -1,13 +1,8 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-#from sqlalchemy.dialects.postgresql import ARRAY,JSONB
 
 Base = declarative_base()
-
-#class CastingArray(ARRAY):
-#    __tablename__ = 'a'
-#    def bind_expression(self, bindvalue):
-#        return sa.cast(bindvalue,self)
 
 class Contact(Base):
     __tablename__ = 'contacts'
@@ -16,7 +11,8 @@ class Contact(Base):
     email     = Column(String, nullable=False)
     firstname = Column(String, nullable=False)
     surname   = Column(String, nullable=False)
-
+    emails    = relationship("Email")
+    
     def __init__(self, username=None,email=None,firstname=None,surname=None):
         self.username  = username
         self.email     = email
@@ -38,11 +34,25 @@ class Contact(Base):
         import json
         return json.dumps(self.toDict())
 
+class Email(Base):
+    __tablename__ = 'emails'
+    id       = Column(Integer, primary_key=True)
+    email    = Column(String, nullable=False)
+    username = Column(String, ForeignKey('contacts.id'))
 
+    def __init__(self, username=None,email=None):
+        self.username  = username
+        self.email     = email
 
-#class Email(Base):
-#    __tablename__ = 'emails'
-#    id       = Column(Integer, primary_key=True)
-#    email    = Column(String, nullable=False)
+    def toDict(self):
+        mydict={}
+        mydict["username"]  = self.username
+        mydict["email"]     = self.email
+        return mydict
+
+    def toJson(self):
+        import json
+        return json.dumps(self.toDict())
+        
 #    owner_id = Column(Integer, ForeigKey('contact.id')
 #    owner    = relationship(Contact, back_populates="emails") 
