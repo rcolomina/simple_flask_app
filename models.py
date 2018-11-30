@@ -44,6 +44,10 @@ class Email(Base):
         self.username  = username
         self.email     = email
 
+    def __repr__(self):
+        return '{}-{}'.format(self.username,self.email)
+
+        
     def toDict(self):
         mydict={}
         mydict["username"]  = self.username
@@ -54,5 +58,3 @@ class Email(Base):
         import json
         return json.dumps(self.toDict())
         
-#    owner_id = Column(Integer, ForeigKey('contact.id')
-#    owner    = relationship(Contact, back_populates="emails") 
