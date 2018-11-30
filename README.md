@@ -1,6 +1,6 @@
 # Simple Flask APP to Register Contact Details
 
-This is simple RESTfull Flask App to register contact details in a database. JSON is the only interchagable format. 
+This is simple RESTfull Flask App to register contact details on its database. JSON is the only interchagable format used by this app. 
 
 ## Installation
 
@@ -8,37 +8,57 @@ This requires python3 and pip to install its dependencies from requirements.txt.
 
 ### Install python3
 
+```
 $ apt-get install python3
+```
 
 ### Install pip
 
+```
 $ apt-get install python3-pip
+```
 
 ### Create a Virtual Environment inside the project folder
 
+```
 $ cd simple_flask_app
 
 $ python3 -m venv testing_env
+```
 
 ### Activate your virtual environment
-
+```
 $ source testing_env/bin/activate
+```
 
 ### Install dependencies Using PIP
-
+```
 $ pip install -r requirements.txt
+```
+### Running this Flask Application
 
-### Running the Application
+Export the following environment variables
+```
+$export FLASK_ENV=development
+$export FLASK_APP=Flask.py
+$ flask run 
+```
+
+Alternatively there is a script which launch these three commands of above for you
 
 $ ./env_flask.sh
 
-At this moment you should open another terminal to launch HTTP commands againts the application. The database of this execution will be created in the project folder.
-
-The application will run in the flask defaul IP and PORT (configuration not implemented yet)
+The application will run on the default Flask IP and PORT
 
 ```
 127.0.0.1:5000
 ```
+
+At this moment you should open another terminal to launch HTTP commands againts the application or used a web brower to test some API request on the URL by default. If this the first time you run the app a database will create in the project folder. Its name is defined by the python configuration file. When you close the app the data will persist on this database.
+
+Every time you run your application again the database configured will be loaded containing allr previously inseted data. It is possible to drop all tables activating a flag in the configuration file. This will reset all content of the database.
+
+
 
 # App Configuration File
 
