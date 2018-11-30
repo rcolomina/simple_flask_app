@@ -24,39 +24,46 @@ from sqlalchemy.ext.declarative import declarative_base
 #   Delete existing user               DELETE  Existing username                    200
 #   Delete non existing user           DELETE  Missing  username                    404
 #   Update contact                     PUT     Existing username                    200
-#   Update contact                     PUT     Missing  username                    200
-#   Update contact                     PUT     Several emails updated               200
-
-#   Overall notice that internal server errors should return 500
+#   Update contact                     PUT     Missing  username                    404
 
 class FlaskTestCase(unittest.TestCase):
 
     def setUp(self):
         print("Testing: Setup App Data Base ")
 
-        # Temporal database 
+        # Temporal URI for the testing database 
         temp_database_uri = 'sqlite:////tmp/flask_unittest.db'
 
-        # Setup temporal database on flask
-        flask.engine     = create_engine(temp_database_uri, convert_unicode=True)
-        flask.DBSession  = sessionmaker(autocommit=False,autoflush=False,bind=flask.engine)
+        # Database Debug (verbosity for db operations on console)
+        database_debug = False #'debug'
+        
+        # Setup temporal database on flask (overwrite flask app database with temporal one)
+        flask.engine     = create_engine(temp_database_uri,
+                                         convert_unicode=True,
+                                         echo=database_debug)
+        
+        flask.DBSession  = sessionmaker(autocommit=False,
+                                        autoflush=False,
+                                        bind=flask.engine)
+
+        # Setup db session
         flask.db_session = scoped_session(flask.DBSession)
         
-        # Dropall previous data before testing in temporal database
+        # Always dropall previous data before testing on temporal database
         flask.Base.metadata.drop_all(bind=flask.engine)
 
-        print("debug:",flask.engine)        
+        # Setup app for testing
         flask.app.testing = True
 
         # Setup app test client
         self.app = flask.app.test_client()
         with flask.app.app_context():
-            flask.setup()  # initialize database
+             # initialize database
+            flask.setup() 
 
     def tearDown(self):
         print("Testing: Clossing down database")
-        flask.db_session.remove()
-
+        #flask.db_session.remove()
         
     def test_unavailable_resource(self):
         print("Testing: POST method non supported")
@@ -70,6 +77,19 @@ class FlaskTestCase(unittest.TestCase):
         assert rv.get_json()['status']  == 404
         assert rv.get_json()['message'] == "Resource Not Found or Not Available."
 
+    def test_method_not_allowed(self):
+        print("Testing: Method not allowed")
+
+        rv = self.app.post('/contact/beaton',
+                           json={"username":"beaton",
+                                 "email":"hbeaton@gmail.com",
+                                 "firstname":"Henry",
+                                 "surname":"Beaton"})
+        assert rv.get_json()['status'] == 405
+        assert rv.get_json()["message"] == "HTTP Method was Not Allowed for the Request."
+
+
+        
     def test_post(self):
         print("Testing: POST method new username")
         rv = self.app.post('/contact/',
@@ -77,9 +97,9 @@ class FlaskTestCase(unittest.TestCase):
                                  "email":"smith@gmail.com",
                                  "firstname":"John",
                                  "surname":"Smith"})
-
+        #print(rv.get_json())        
         assert rv.get_json()['message'] == "Contact inserted succesfully in the database. ( Username = smith1 )"
-        assert rv.get_json()['status'] == 200
+        assert rv.get_json()['status']  == 200
         
         print("Testing: POST when null argument")
         rv = self.app.post('/contact/',
@@ -88,7 +108,6 @@ class FlaskTestCase(unittest.TestCase):
                                  "firstname":"John"})
 
         assert rv.get_json()['status']  == 400
-        #print(rv.get_json()['message'])
         assert rv.get_json()['message'] == "Bad Request. Invalid Keys in Data JSON request."
                 
         print("Testing: POST method existing username")
@@ -111,7 +130,7 @@ class FlaskTestCase(unittest.TestCase):
                                  "surname":"Smith"})
 
         assert rv.get_json()['message'] == "Contact inserted succesfully in the database. ( Username = jsmith )"
-        print(rv.get_json()['message'])
+        #print(rv.get_json()['message'])
         assert rv.get_json()['status'] == 200
         
 
@@ -134,7 +153,7 @@ class FlaskTestCase(unittest.TestCase):
         print("Testing: Get contact by a missing username")
         rv = self.app.get('/contact/smithdsa1dasds')
         assert rv.get_json()['status'] == 404
-        print(rv.get_json()['message'])
+        #print(rv.get_json()['message'])
         assert rv.get_json()['message'] == "Contant Not Found in database. Username 'smithdsa1dasds' does not exist."
 
         
@@ -159,7 +178,7 @@ class FlaskTestCase(unittest.TestCase):
         
         rv = self.app.get('/contact/')
         json_data = rv.get_json()
-
+        #print(json_data)
         assert json_data["contacts"][0]["username"]  == 'smithdsa1'
         assert json_data["contacts"][0]["email"]     == ["smith@gmail.com",
                                                          "smith3@hotmail.com"]
@@ -276,7 +295,7 @@ class FlaskTestCase(unittest.TestCase):
         assert rv.get_json()['status'] == 404        
         assert rv.get_json()["message"] == "Contant Not Found in database. Username 'smithd' does not exist."
 
-        # Check that usernames deleted does not exist in the database
+        # Check that usernames deleted does not exist in the database trying to get them
         rv = self.app.get('/contact/beaton')
         assert rv.get_json()['status'] == 404        
         assert rv.get_json()['message'] == "Contant Not Found in database. Username 'beaton' does not exist."
@@ -290,17 +309,42 @@ class FlaskTestCase(unittest.TestCase):
         assert rv.get_json()['message'] == "Contant Not Found in database. Username 'smith' does not exist."
 
         
-    def test_method_not_allowed(self):
-        print("Testing: Method not allowed")
-
-        rv = self.app.post('/contact/beaton',
-                           json={"username":"beaton",
-                                 "email":"hbeaton@gmail.com",
-                                 "firstname":"Henry",
+    def test_update_user(self):
+        print("Testing: Updated a user with multiple emails")
+        
+        rv = self.app.post('/contact/',
+                           json={"username":"amybeaton1",
+                                 "email":["abeaton@gmail.com",
+                                          "abeaton@hotmail.com"],
+                                 "firstname":"Amy",
                                  "surname":"Beaton"})
-        assert rv.get_json()['status'] == 405
-        assert rv.get_json()["message"] == "HTTP Method was Not Allowed for the Request."
+        
+        rv = self.app.put('/contact/amybeaton1',
+                          json={"email":["abeaton_updated@gmail.com",
+                                         "abeaton_updated@hotmail.com",
+                                         "new_updated_abeation@hotmail.com"],
+                                 "firstname":"Ami",
+                                 "surname":"Beaton"})
+        
+        rv = self.app.get('/contact/amybeaton1')
+        assert rv.get_json()['status']  == 200
+        assert rv.get_json()['message'] == 'Specific Contact retrieved succesfully from the database.'
+        assert rv.get_json()['contact']['email'] == ['abeaton_updated@gmail.com',
+                                                     'abeaton_updated@hotmail.com',
+                                                     'new_updated_abeation@hotmail.com']
+        assert rv.get_json()['contact']['firstname'] == 'Ami'
 
+
+        print("Testing: Updated a missing user")
+        
+        rv = self.app.put('/contact/amybeaton12345',
+                          json={"email":["abeaton_updated@gmail.com",
+                                         "abeaton_updated@hotmail.com"],
+                                 "firstname":"Ami",
+                                 "surname":"Beaton"})
+        assert rv.get_json()['status'] == 404        
+        assert rv.get_json()['message'] == "Contant Not Found in database. Username 'amybeaton12345' does not exist."
+        
             
 if __name__ == '__main__':
     unittest.main()
