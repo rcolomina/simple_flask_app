@@ -21,6 +21,7 @@ class Config(object):
 
     # Returning message from request
     MSG_OK_ALL_CONTACT_RET = "All Contacts were retrieved succesfully from the database."
+    MSG_OK_CONTACT_BY_EMAIL= "Contacts retrieved succesfully from the database by email"
     MSG_OK_CONTACT_RET     = "Specific Contact retrieved succesfully from the database."
     MSG_OK_CONTACT_INSERT  = "Contact inserted succesfully in the database."
     MSG_OK_CONTACT_UPDATED = "Contact updated  succesfully in the database."
