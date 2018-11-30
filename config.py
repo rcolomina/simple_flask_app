@@ -2,12 +2,14 @@ import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-class Config(object):
+class Config(object):    
     # SqlAlchemy Configuration 
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
                               'sqlite:///' + os.path.join(basedir, 'myapp.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
+    DB_ENGINE_DEBUG_ON             = True
+    DROP_ALL_TABLES_ON_START       = False  # WARNING!! True values may produce data loss.
+    
     # Error Strings
     BAD_DATA             = "BAD_DATA"
     BAD_REQUEST          = "BAD_REQUEST"
@@ -25,7 +27,7 @@ class Config(object):
     MSG_OK_CONTACT_RET     = "Specific Contact retrieved succesfully from the database."
     MSG_OK_CONTACT_INSERT  = "Contact inserted succesfully in the database."
     MSG_OK_CONTACT_UPDATED = "Contact updated  succesfully in the database."
-    MSG_BAD_DATA_FORMAT    = "Data was not given in proper JSON format."
+    MSG_BAD_DATA_FORMAT    = "Data not provided in JSON format."
     MSG_BAD_REQUEST        = "Bad Request."
     MSG_VOID_DATA_JSON     = "A void Json file was provided in the request."
     MSG_DEL_CONTACT        = "Contact deleted from the database."
