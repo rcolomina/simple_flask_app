@@ -1,5 +1,46 @@
-''' HTTP Response Codes
+# Flask modules
+from flask         import Flask, request,  make_response, jsonify, abort
+from flask_restful import Api
 
+# SqlAlchemy modules
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+import sqlalchemy
+
+# Others
+import json
+import werkzeug
+
+# Internal modules
+from models import Base, Contact, Email
+from aux_functions import output_not_found
+from aux_functions import output_bad_request
+from aux_functions import check_email_reg_exp
+from aux_functions import get_data_from_dict
+from aux_functions import string_on_extracted_data
+from aux_functions import check_email_reg_exp
+
+from config import Config
+
+# Initialize Flask Application
+app = Flask(__name__)
+
+# Default configurataion for the app
+app.config['SQLALCHEMY_DATABASE_URI']        = Config.SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
+
+# Create API from this app
+api = Api(app)
+
+## CREATE ENGINE and SESSION using the declarative way
+sqlalchemy_database_uri = app.config['SQLALCHEMY_DATABASE_URI']
+engine                  = create_engine(sqlalchemy_database_uri, convert_unicode=True,echo='debug')
+DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
+db_session              = scoped_session(DBSession)
+
+
+''' HTTP Response Codes
 200 OK
 201 CREATED
 400 BAD REQUEST
@@ -9,53 +50,7 @@
 405 METHOD NOT ALLOWED
 409 CONFLICT
 500 INTERNAL SERVER ERROR
-
 '''
-
-from flask         import Flask, request,  make_response, jsonify, abort
-from flask_restful import Api
-
-from models import Base, Contact
-
-import json
-import werkzeug
-import sqlalchemy
-
-from aux_functions import output_not_found
-from aux_functions import output_bad_request
-from aux_functions import check_email_reg_exp
-from aux_functions import get_data_from_dict
-from aux_functions import string_on_extracted_data
-
-#from flask_sqlalchemy import SQLAlchemy
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-
-# Initialize Flask Application
-app = Flask(__name__)
-
-from config import Config
-
-# Default configurataion for the app
-app.config['SQLALCHEMY_DATABASE_URI']        = Config.SQLALCHEMY_DATABASE_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
-
-
-# Create API from this app
-api = Api(app)
-
-#db = SQLAlchemy(app)
-#DBSession  = sessionmaker(autocommit=False,autoflush=False,bind=engine)
-#db_session = scoped_session(DBSession)
-#db_session=db.session
-
-## CREATE ENGINE and SESSION using the declarative way
-sqlalchemy_database_uri = app.config['SQLALCHEMY_DATABASE_URI']
-engine                  = create_engine(sqlalchemy_database_uri, convert_unicode=True,echo='debug')
-DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
-db_session              = scoped_session(DBSession)
 
 ##########################
 # INITIALIZING DATA BASE #
@@ -64,14 +59,11 @@ db_session              = scoped_session(DBSession)
 def setup():
     print("debug: setup app")
     # Binding Base Model class to the engine
-
-    # TODO drop all from configuration
+    # TODO: Activate drop all from configuration
     #Base.metadata.drop_all(bind=engine)
-
     Base.query = db_session.query_property()
     # Create Tables
     Base.metadata.create_all(bind=engine)
-    #print("debug:",engine)
 
 ###############################
 # DEFINING API REPRESENTATION #
@@ -79,7 +71,6 @@ def setup():
 @api.representation('application/json')
 def jsonify_output(data, status_code=200, headers=None, indent=4):
     print("debug:outputting in json format with status code "+str(status_code))
-    #print("hello data",data)
     resp = make_response(json.dumps(data,indent=indent), status_code)
     resp.headers['Content-Type'] = 'application/json; charset=utf-8'
     resp.headers['mimetype'] = 'application/json'
@@ -104,8 +95,7 @@ def internal_server_error(e):
                           
 @app.errorhandler(Exception) 
 def handle_error(error):
-    #print(type(error))
-    
+    print("debug: handle_error")
     if isinstance(error,werkzeug.exceptions.MethodNotAllowed):
         return jsonify_output({"status":405,
                                "message":Config.MSG_HTTP_INVALID},405)
@@ -117,7 +107,6 @@ def handle_error(error):
     if isinstance(error,sqlalchemy.exc.IntegrityError):
         return jsonify_output({"status":400,
                                "message":Config.MSG_INTEGRITY_ERROR},400)
-
     # Anything else
     return jsonify_output({"status":500,
                            "message":Config.MSG_INTERNAL_ERROR},500)    
@@ -140,10 +129,9 @@ def post_contact():
     
     mydict={}
     try:
-        ''' This functions only is used from POST and PUT routes
-        This shoud try to get JSON content from request data
+        ''' This function is only used from POST and PUT routes
+        This shoud try to parse JSON content from request data
         otherwise return non JSON format '''
-        print(request.__dict__)
         mydict = request.get_json()  
     except:
         data,status = output_bad_request(Config.MSG_BAD_DATA_FORMAT)
@@ -154,10 +142,8 @@ def post_contact():
         data,status = output_bad_request(Config.MSG_VOID_DATA_JSON)
         return jsonify_output(data,status)
     
-    extractData = get_data_from_dict(mydict)
-    
+    extractData = get_data_from_dict(mydict)    
     isBadData,message = string_on_extracted_data(extractData)    
-
     if isBadData:
         data,status = output_bad_request(message)
         return jsonify_output(data,status)
@@ -167,12 +153,15 @@ def post_contact():
                           extractData[1],
                           extractData[2],
                           extractData[3])
-    print("debug: new contact created ok")
+
+    # Append list emails on its table
+    for email in extractData[1].split("|"):
+        new_email = Email(extractData[0],email)
+        db_session.add(new_email)
     
     # Add new contact to db
     db_session.add(new_contact)
     db_session.commit()
-    print("debug: data commited OK")
 
     # Return OK message
     message = Config.MSG_OK_CONTACT_INSERT+" ( Username = "+extractData[0]+" )"
@@ -189,7 +178,9 @@ def get_all_contact():
     listOfContacts=[]
     if len(myQueryContact) > 0:
         for query in myQueryContact:
-            listOfContacts.append(query.toDict())
+            contactDict=query.toDict()            
+            contactDict["email"] = contactDict["email"].split("|")
+            listOfContacts.append(contactDict)
 
         status = 200 
         data = {"status":status,
@@ -202,33 +193,70 @@ def get_all_contact():
 @app.route('/contact/<username>',methods=['GET']) 
 def get_single_contact(username):
     print('debug: get_single_contact')
-    # Querying contact matching username
-    
+    # Querying contact matching username    
     myQueryContact = Contact.query.filter(Contact.username == username).first()    
-    #print("*******",myQueryContact,username)
     if myQueryContact != None:
+        contactDict = myQueryContact.toDict()        
+        contactDict["email"] = contactDict["email"].split("|")
+
         status = 200
         data = {"status":status,
                 "message":Config.MSG_OK_CONTACT_RET,
-                "contacts":myQueryContact.toDict()}     
+                "contacts":contactDict}     
         
         return jsonify_output(data, status)
     else:
-        #print("not found")
-        #print(output_not_found(username))
         data,status = output_not_found(username)
         return jsonify_output(data, status)
 
+@app.route('/contact/email/<email>',methods=['GET']) 
+def get_contacts_by_email(email):
+    print('debug: get_contacts_by_email')
+
+    # Check that input email is a valid one
+    if not check_email_reg_exp(email):
+        status = 400
+        data = {"status":status,
+                "message":Config.MSG_INVALID_EMAIL}
+        return jsonify_output(data, status)
+        
+    # Querying usernames by incoming emails
+    myQueryEmails = Email.query.filter(Email.email == email).all()
+
+    print(myQueryEmails)
+    if myQueryEmails == []:
+        message = Config.MSG_DATA_NOT_FOUND
+        status = 404
+        data = {"status":status,"message":message}
+        return jsonify_output(data,status)
+
+        
+    listContactsWithEmail=[]
+    for queryEmail in myQueryEmails:
+        username = queryEmail.username
+        print("debug username:",username)
+        myQueryContact = Contact.query.filter(Contact.username == username).first()
+        myDictQueryContact = myQueryContact.toDict()
+        myDictQueryContact["email"] = myDictQueryContact["email"].split('|')
+        listContactsWithEmail.append(myDictQueryContact)
+        
+    message = Config.MSG_OK_CONTACT_BY_EMAIL
+    status = 201
+    data = {"status":status,"message":message,"email":email,
+            "contacts":listContactsWithEmail}
+        
+    return jsonify_output(data,status)
+    
+    
 @app.route('/contact/<username>',methods=['PUT'])
 def update_single_contact(username):
     print("debug: updating single contact")
     myQueryContact = Contact.query.filter(Contact.username == username).first()    
     if myQueryContact != None:
-
         mydict={}
         try:
-            ''' This functions only is used from POST and PUT routes
-            This shoud try to get JSON content from request data
+            ''' This function is only used from POST and PUT routes
+            This shoud try to parser JSON content from request data
             otherwise return non JSON format '''
             mydict = request.get_json()
             mydict['username'] = username
@@ -238,8 +266,7 @@ def update_single_contact(username):
         
         extractData = get_data_from_dict(mydict)
         isBadData,message = string_on_extracted_data(extractData)
-        #print("****",isBadData)
-        print(isBadData,message)
+
         if isBadData:
             data,status = output_bad_request(message)
             return jsonify_output(data, status)
@@ -248,13 +275,25 @@ def update_single_contact(username):
         myQueryContact.firstname = extractData[2]
         myQueryContact.surname   = extractData[3]
 
+        # Delete previous Emails on its table by username
+        # Notice that at least one email must exist since email in contact is not null
+        myQueryEmails = Email.query.filter(Email.username == username)
+        myQueryEmails.delete()
+        
+        # Append list of input emails (validated) into the Email table
+        for email in extractData[1].split("|"):
+            username  = extractData[0]
+            new_email = Email(username,email)
+            db_session.add(new_email)
+
+        # Commit changes
         db_session.commit()
 
         message = Config.MSG_OK_CONTACT_UPDATED
         status = 201
         data = {"message":message,"status":status,
                 "contact_updated":{"username":username,
-                                   "email":myQueryContact.email,
+                                   "email":myQueryContact.email.split("|"),
                                    "firstname":myQueryContact.firstname,
                                    "surname":myQueryContact.surname}}
         
@@ -264,22 +303,16 @@ def update_single_contact(username):
         return jsonify_output(data,status)
 
 
-
-
-
 @app.route('/contact/<username>',methods=['DELETE'])
 def delete_single_contact(username):
     print("debug: Deleting single contact")
     print("debug: URI username:",username)
 
-    #session = db_session()
-    myQueryContact = Contact.query.filter(Contact.username == username).first()
-    #print(myQueryContact)
-    if myQueryContact != None:
+    queryContact = Contact.query.filter(Contact.username == username).first()
+    if queryContact != None:
 
-        myQuery = Contact.query.filter(Contact.username == username)
-        #print(myQuery)
-        myQuery.delete()
+        queryContact = Contact.query.filter(Contact.username == username)
+        queryContact.delete()
         db_session.commit()
 
         message = Config.MSG_DEL_CONTACT
