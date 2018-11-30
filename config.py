@@ -2,22 +2,19 @@ import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-class Config(object):    
-    # SqlAlchemy Configuration 
+class Config(object):
+    # IP and PORT confiugration
+    FLASK_IP    = "127.0.0.1"
+    FLASK_PORT  = "5000"
+    
+    # SqlAlchemy Configuration
+    SQLITE_DATABASE         = "myapp.db"
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-                              'sqlite:///' + os.path.join(basedir, 'myapp.db')
+                              'sqlite:///' + os.path.join(basedir, SQLITE_DATABASE)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DB_ENGINE_DEBUG_ON             = True
     DROP_ALL_TABLES_ON_START       = False  # WARNING!! True values may produce data loss.
     
-    # Error Strings
-    BAD_DATA             = "BAD_DATA"
-    BAD_REQUEST          = "BAD_REQUEST"
-    INVALID_USERNAME     = "INVALID_USERNAME"
-    INVALID_KEYS         = "INVALID_KEYS"
-    NULL_KEY_ID          = "NULL_KEY_ID"
-    INVALID_EMAIL        = "INVALID_EMAIL"
-
     # Regular expresion to parse email
     REGEXP_EMAIL         = "^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$"
 
@@ -40,3 +37,11 @@ class Config(object):
     MSG_INVALID_KEYS       = "Invalid Keys in Data JSON request."
     MSG_NULL_KEY_ID        = "Null Primary Key was provided in Data JSON request."            
     MSG_INVALID_EMAIL      = "Invalid email pattern found."
+
+    # Internal Error Strings
+    BAD_DATA             = "BAD_DATA"
+    BAD_REQUEST          = "BAD_REQUEST"
+    INVALID_USERNAME     = "INVALID_USERNAME"
+    INVALID_KEYS         = "INVALID_KEYS"
+    NULL_KEY_ID          = "NULL_KEY_ID"
+    INVALID_EMAIL        = "INVALID_EMAIL"
