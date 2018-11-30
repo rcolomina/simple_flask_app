@@ -308,7 +308,7 @@ def update_single_contact(username):
 @app.route('/contact/<username>',methods=['DELETE'])
 def delete_single_contact(username):
     print("debug: Deleting single contact")
-    #print("debug: URI username:",username)
+
 
     queryContact = Contact.query.filter(Contact.username == username).first()
     if queryContact != None:
