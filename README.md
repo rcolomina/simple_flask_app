@@ -157,11 +157,12 @@ Also you can also run them separately by HTTP method depending on the purpose:
 $ python -m unittest -q flask_test.FlaskTestCase.test_unavailable_resource
 $ python -m unittest -q flask_test.FlaskTestCase.test_method_not_allowed
 $ python -m unittest -q flask_test.FlaskTestCase.test_post
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_username
 $ python -m unittest -q flask_test.FlaskTestCase.test_get_by_username
 $ python -m unittest -q flask_test.FlaskTestCase.test_get_all
 $ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
-$ python -m unittest -q flask_test.FlaskTestCase.test_get_contacts_by_email
+$ python -m unittest -q flask_test.FlaskTestCase.test_delete_user
+$ python -m unittest -q flask_test.FlaskTestCase.test_update_user
+
 ```
 
 ## CURL testing
