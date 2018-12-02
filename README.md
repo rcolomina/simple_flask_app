@@ -223,11 +223,11 @@ SQL Alchemy is an API for databases allowing abstractions on SQL, which means th
 
 # Celery Testing
 
-A celery task has been created for testing. It post a randowm contact with two emails each 15 seconds. Also each contact older than 1 minutes is deleted.
+In this project there is a simple celery task that has been created for testing asynchronous messages. This task will post randowm contacts having two emails each 15 seconds then deleting all contacts older than 1 minute.
 
-Before starting celery task you should have installed and running an asynchronous messaging system or also called broker. This project is using redis which has to be running as a background daemon. To install and running redis follow the link  
+Before starting the celery task you should have installed and running an asynchronous messaging system or also called broker. This project is using redis for that which has to be running as a background daemon as message receiver/sender. To install that you should have running celerys with redis explained in the following link [docs.celeryproject.org](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery)  
 
-To test celery task firstly open a new terminal window activating the python environment installed before.
+To test the python celery task of this project firstly open a new terminal window activating the python environment installed before.
 ```
 $ cd simple_flask_app
 $ source testing_env/bin/activate
