@@ -29,12 +29,21 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']        = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 
+
+# Enable/Disable debug
+#app.config['SQLALCHEMY_ECHO'] = True
+
+
 # Create API from this app
 api = Api(app)
 
+
+
 ## CREATE ENGINE and SESSION using the declarative way
 sqlalchemy_database_uri = app.config['SQLALCHEMY_DATABASE_URI']
-engine                  = create_engine(sqlalchemy_database_uri,convert_unicode=True,echo='debug')
+engine                  = create_engine(sqlalchemy_database_uri,
+                                        convert_unicode=True,
+                                        echo=False)#'debug')#False)#'debug')
 DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
 db_session              = scoped_session(DBSession)
 
@@ -57,10 +66,11 @@ db_session              = scoped_session(DBSession)
 @app.before_first_request
 def setup():
     print("debug: setup app")
+    
     # Drop all tables 
     if Config.DROP_ALL_TABLES_ON_START:
         Base.metadata.drop_all(bind=engine)
-
+        
     # Binding Base Model class to the engine
     Base.query = db_session.query_property()
     Base.metadata.create_all(bind=engine)
@@ -70,8 +80,13 @@ def setup():
 ###############################
 @api.representation('application/json')
 def jsonify_output(data, status_code=200, headers=None, indent=4):
-    print("debug:outputting in json format with status code "+str(status_code))
-    resp = make_response(json.dumps(data,indent=indent), status_code)
+    print("debug: outputting in json format with status code "+str(status_code))
+    try:
+        resp = make_response(json.dumps(data,indent=indent), status_code)
+    except Exception:
+        print("debug: Error creating response")
+        abort(500)
+
     resp.headers['Content-Type'] = 'application/json; charset=utf-8'
     resp.headers['mimetype'] = 'application/json'
     resp.status_code = status_code
@@ -175,12 +190,15 @@ def get_all_contact():
     print("debug: get_all_contacts")
     myQueryContact = Contact.query.all()
     listOfContacts=[]
+    #print(len(myQueryContact))
     if len(myQueryContact) > 0:
         for query in myQueryContact:
-            contactDict=query.toDict()            
+            contactDict=query.toDict()
+            #print(contactDict)
             contactDict["email"] = contactDict["email"].split("|")
+            
             listOfContacts.append(contactDict)
-
+            #print(listOfContacts)
         status = 200 
         data = {"status":status,
                 "message":Config.MSG_OK_ALL_CONTACT_RET,
@@ -197,7 +215,11 @@ def get_single_contact(username):
     if myQueryContact != None:
         contactDict = myQueryContact.toDict()        
         contactDict["email"] = contactDict["email"].split("|")
-
+        #print("***************************************")
+        #print(type(myQueryContact))
+        #print(myQueryContact)
+        #contactDict["creationDateTime"] = myQueryContact["creationDateTime"]
+        #print((myQueryContact.__dict__)["creationDateTime"])
         status = 200
         data = {"status":status,
                 "message":Config.MSG_OK_CONTACT_RET,
