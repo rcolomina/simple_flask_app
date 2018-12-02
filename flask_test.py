@@ -40,8 +40,7 @@ class FlaskTestCase(unittest.TestCase):
         # Setup temporal database on flask (overwrite flask app database with temporal one)
         flask.engine     = create_engine(temp_database_uri,
                                          convert_unicode=True,
-                                         echo=database_debug)
-        
+                                         echo=database_debug)        
         flask.DBSession  = sessionmaker(autocommit=False,
                                         autoflush=False,
                                         bind=flask.engine)
@@ -97,7 +96,7 @@ class FlaskTestCase(unittest.TestCase):
                                  "email":"smith@gmail.com",
                                  "firstname":"John",
                                  "surname":"Smith"})
-        #print(rv.get_json())        
+
         assert rv.get_json()['message'] == "Contact inserted succesfully in the database. ( Username = smith1 )"
         assert rv.get_json()['status']  == 200
         
@@ -113,7 +112,8 @@ class FlaskTestCase(unittest.TestCase):
         print("Testing: POST method existing username")
         rv = self.app.post('/contact/',
                            json={"username":"smith1",
-                                 "email":["smith@gmail.com","smith@hotmail.com"],
+                                 "email":["smith@gmail.com",
+                                          "smith@hotmail.com"],
                                  "firstname":"John",
                                  "surname":"Smith"})
 
@@ -130,7 +130,7 @@ class FlaskTestCase(unittest.TestCase):
                                  "surname":"Smith"})
 
         assert rv.get_json()['message'] == "Contact inserted succesfully in the database. ( Username = jsmith )"
-        #print(rv.get_json()['message'])
+
         assert rv.get_json()['status'] == 200
         
 
@@ -153,7 +153,7 @@ class FlaskTestCase(unittest.TestCase):
         print("Testing: Get contact by a missing username")
         rv = self.app.get('/contact/smithdsa1dasds')
         assert rv.get_json()['status'] == 404
-        #print(rv.get_json()['message'])
+
         assert rv.get_json()['message'] == "Contant Not Found in database. Username 'smithdsa1dasds' does not exist."
 
         
@@ -178,7 +178,7 @@ class FlaskTestCase(unittest.TestCase):
         
         rv = self.app.get('/contact/')
         json_data = rv.get_json()
-        #print(json_data)
+
         assert json_data["contacts"][0]["username"]  == 'smithdsa1'
         assert json_data["contacts"][0]["email"]     == ["smith@gmail.com",
                                                          "smith3@hotmail.com"]
@@ -226,18 +226,23 @@ class FlaskTestCase(unittest.TestCase):
         rv = self.app.get('/contact/email/asmith@gmail.com')
         assert rv.get_json()['status']   == 201
         assert rv.get_json()['message']  == 'Contacts retrieved succesfully from the database by email'
-        assert rv.get_json()['contacts'] ==  [{'username': 'jsmith',
-                                               'email': ['jsmith@gmail.com',
+        #print(rv.get_json()['contacts'])
+        
+        assert rv.get_json()['contacts'][0]['username'] == 'jsmith'
+        assert rv.get_json()['contacts'][0]['email'] == ['jsmith@gmail.com',
                                                          'jsmith@hotmail.com',
-                                                         'asmith@gmail.com'],
-                                               'firstname': 'John',
-                                               'surname': 'Smith'},
-                                              {'username': 'asmith',
-                                               'email': ['asmith@gmail.com',
-                                                         'asmith@hotmail.com',
-                                                         'jsmith@gmail.com'],
-                                               'firstname': 'Ada',
-                                               'surname': 'Smith'}]
+                                                         'asmith@gmail.com']
+        assert rv.get_json()['contacts'][0]['surname'] == 'Smith'
+        assert rv.get_json()['contacts'][0]['firstname'] == 'John'
+
+        assert rv.get_json()['contacts'][1]['username'] == 'asmith'
+        assert rv.get_json()['contacts'][1]['email'] == ['asmith@gmail.com',
+                                                        'asmith@hotmail.com',
+                                                        'jsmith@gmail.com']
+        assert rv.get_json()['contacts'][1]['surname'] == 'Smith'
+        assert rv.get_json()['contacts'][1]['firstname'] == 'Ada'
+
+
 
 
         print("Testing: Get contacts by email with bad format")
