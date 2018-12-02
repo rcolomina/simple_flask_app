@@ -223,21 +223,20 @@ SQL Alchemy is an API for databases allowing abstractions on SQL, which means th
 
 # Celery Testing
 
-In this project there is a simple celery task that has been created for testing asynchronous messages. This task will post randowm contacts having two emails each 15 seconds then deleting all contacts older than 1 minute.
+In this project there is a simple celery task for testing asynchronous messages between the server of the flask app and its clients. This testing task will post random contacts with two emails each for 15 seconds cycles. Then contacts older than 1 minute will be deleted.
 
-Before starting the celery task you should have installed and running an asynchronous messaging system or also called broker. This project is using redis for that which has to be running as a background daemon as message receiver/sender. To install that you should have running celerys with redis explained in the following link [docs.celeryproject.org](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery)  
+Before starting this celery task you should have installed and running an asynchronous messaging system or also called broker. In particular this project is using redis which is running as a background daemon to be a message receiver/sender. For more details about celery with redis installation you can follow the link [docs.celeryproject.org](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#installing-celery)  
 
-To test the python celery task of this project firstly open a new terminal window activating the python environment installed before.
+To test the celery task of the project open a new terminal window activating the python environment
 ```
 $ cd simple_flask_app
 $ source testing_env/bin/activate
 ```
-Now submmit your task in debug mode
+Now you can submmit your task in debug mode executing the following line
 ```
-$ cd simple_flask_app
-$ celery -A tasks worker --loglevel=debug
+$ celery -A tasks_periodic worker --loglevel=debug
 ```
-In this terminal you should have an output as follows 
+You will have in this terminal the output as follows 
 
 ```
  -------------- celery@workstation-rig v4.2.1 (windowlicker)
@@ -254,13 +253,28 @@ In this terminal you should have an output as follows
  -------------- [queues]
                 .> celery           exchange=celery(direct) key=celery
 ```
-
-Open another terminal activating python environment
+Open another terminal activating python environment and run the beat scheduler
 ```
 $ cd simple_flask_app
 $ source testing_env/bin/activate
+$ celery -A tasks_periodic beat
 ```
-To launch task to worker should be traceable in the previous terminalin asynchronous mode 
+
+At this point you should have messages on the first terminal (worker init) without errors. You can see tasks have been received by the worker from the beat scheduler. There are fore posting and deleting contacts as explained above
+
+```
+[2018-12-02 23:12:16,919: INFO/MainProcess] Received task: tasks_periodic.delete_older_entries[fc9706b6-dc5d-49d5-bcd1-5db54bb1e5a3]  
+...
+[2018-12-02 23:12:16,962: INFO/ForkPoolWorker-1] Task tasks_periodic.post_random_contact[a9628275-21cc-4619-8280-16cc6e6ca8b4] succeeded in 0.04553862699685851s: <Response streamed [200 OK]>
+
+```
+Notice that tasks_periodic.delete_older_entires has a return [200 OK] in response from Flask app.
+
+Simimar traces are shown when posting a random contact
+```
+[2018-12-02 23:12:50,410: INFO/MainProcess] Received task: tasks_periodic.post_random_contact[55cbb8fd-fb1c-4889-93e7-6b299198d390]
+[2018-12-02 23:12:50,460: INFO/ForkPoolWorker-3] Task tasks_periodic.delete_older_entries[919cd7bd-4c68-46d8-84e9-265492061072] succeeded in 0.06035223400249379s: <Response streamed [200 OK]>
+```
 
 # Authors
 
@@ -269,4 +283,5 @@ To launch task to worker should be traceable in the previous terminalin asynchro
 # License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details.
+
 
