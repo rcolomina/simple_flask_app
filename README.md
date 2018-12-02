@@ -1,50 +1,58 @@
 # Simple Flask APP to Register Contact Details
 
-This is simple RESTfull Flask App to register contact details on its database. JSON is the only interchagable format used by this app. 
+This is simple RESTfull Flask App to register contact details on its database. JSON is the only interchagable format used by this app to serialize messages. 
+
+## Download
+
+Use git to clone this repository locally on your system.
+```
+$ git clone https://github.com/rcolomina/simple_flask_app
+```
 
 ## Installation
 
-This requires python3 and pip to install its dependencies from requirements.txt.
+This app has been developed in Ubuntu 16.04. It is likely it will work in other Unix based OS without too much alterations.
 
-### Install python3
+This requires python3 using pip to install its dependencies from text fle requirements.txt.
 
+### Install python3 and pip
+
+You should have install these on your system
 ```
-$ apt-get install python3
-```
-
-### Install pip
-
-```
-$ apt-get install python3-pip
+$ apt-get install python3 -y
+$ apt-get install python3-pip -y
 ```
 
-### Create a Virtual Environment inside the project folder
+### Virtual Environment
+To not interfier with any other python installation it is recommended to create a virual environment inside the project folder downloaded.
 
 ```
 $ cd simple_flask_app
-
 $ python3 -m venv testing_env
 ```
 
 ### Activate your virtual environment
+
+Once the virtual environment has been created you should activate it using source.
 ```
 $ source testing_env/bin/activate
 ```
 
 ### Install dependencies Using PIP
+
+Once you have actiated the environment install all its dependencies using pip/
 ```
 $ pip install -r requirements.txt
 ```
 ### Running this Flask Application
 
-Export the following environment variables
+Export the following environment variables to make it possible running the flask applicatioin
 ```
 $export FLASK_ENV=development
 $export FLASK_APP=Flask.py
 $ flask run 
-```
-
-Alternatively there is a script which launch these three commands of above for you
+``
+Alternatively there is a script in the project folder allowing to launch these three commands of above for you automatically
 
 ```
 $ ./env_flask.sh
@@ -206,6 +214,44 @@ SQL Alchemy is an API for databases allowing abstractions on SQL, which means th
 
 # Celery Testing
 
+A celery task has been created for testing. It post a randowm contact with two emails each 15 seconds. Also each contact older than 1 minutes is deleted.
+
+Before starting celery task you should have installed and running an asynchronous messaging system or also called broker. This project is using redis which has to be running as a background daemon. To install and running redis follow the link  
+
+To test celery task firstly open a new terminal window activating the python environment installed before.
+```
+$ cd simple_flask_app
+$ source testing_env/bin/activate
+```
+Now submmit your task in debug mode
+```
+$ cd simple_flask_app
+$ celery -A tasks worker --loglevel=debug
+```
+In this terminal you should have an output as follows 
+
+```
+ -------------- celery@workstation-rig v4.2.1 (windowlicker)
+---- **** ----- 
+--- * ***  * -- Linux-4.15.0-39-generic-x86_64-with-debian-buster-sid 2018-12-02 12:22:25
+-- * - **** --- 
+- ** ---------- [config]
+- ** ---------- .> app:         tasks:0x7fa6cb313860
+- ** ---------- .> transport:   redis://127.0.0.1:6379/0
+- ** ---------- .> results:     disabled://
+- *** --- * --- .> concurrency: 2 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+```
+
+Open another terminal activating python environment
+```
+$ cd simple_flask_app
+$ source testing_env/bin/activate
+```
+To launch task to worker should be traceable in the previous terminalin asynchronous mode 
 
 # Authors
 
