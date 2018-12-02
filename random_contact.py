@@ -7,10 +7,9 @@ def get_random_string(size=12,chars= ascii_uppercase + ascii_lowercase + string.
     return ''.join(random.choice(chars) for _ in range(size))
     
 def get_random_email():
-    return "".join([get_random_string(),"@",
+    return ''.join([get_random_string(),'@',
                     get_random_string(),'.',
                     get_random_string(size=3,chars=ascii_uppercase+ascii_lowercase)])
-
 
 def get_random_contact_json():
     r_contact = {}

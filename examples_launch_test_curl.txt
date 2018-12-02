@@ -1,20 +1,12 @@
 Examples to lauching curl CLI againts the app:
 
 ./test_curl_delete_contact_by_username.sh jsmith
-
 ./test_curl_get_all.sh 
-
 ./test_curl_get_contacts_by_email.sh jsmith@gmail.com
-
 ./test_curl_get_username.sh jsmith
-
 ./test_curl_post_simpledata.sh
-
 ./test_curl_post_username_emails.sh jsmith
-
 ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
-
 ./test_curl_put_username_emails.sh fbolson
-
 ./test_curl_put_username.sh jsmith jsmith@gmail.com John Smith
 

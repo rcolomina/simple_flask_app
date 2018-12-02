@@ -29,15 +29,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']        = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
 
-
 # Enable/Disable debug
 #app.config['SQLALCHEMY_ECHO'] = True
 
-
 # Create API from this app
 api = Api(app)
-
-
 
 ## CREATE ENGINE and SESSION using the declarative way
 sqlalchemy_database_uri = app.config['SQLALCHEMY_DATABASE_URI']
@@ -46,7 +42,6 @@ engine                  = create_engine(sqlalchemy_database_uri,
                                         echo=False)#'debug')#False)#'debug')
 DBSession               = sessionmaker(autocommit=False,autoflush=False,bind=engine)
 db_session              = scoped_session(DBSession)
-
 
 ''' HTTP Response Codes
 200 OK
@@ -66,7 +61,6 @@ db_session              = scoped_session(DBSession)
 @app.before_first_request
 def setup():
     print("debug: setup app")
-    
     # Drop all tables 
     if Config.DROP_ALL_TABLES_ON_START:
         Base.metadata.drop_all(bind=engine)
@@ -190,15 +184,12 @@ def get_all_contact():
     print("debug: get_all_contacts")
     myQueryContact = Contact.query.all()
     listOfContacts=[]
-    #print(len(myQueryContact))
+
     if len(myQueryContact) > 0:
         for query in myQueryContact:
             contactDict=query.toDict()
-            #print(contactDict)
-            contactDict["email"] = contactDict["email"].split("|")
-            
+            contactDict["email"] = contactDict["email"].split("|")        
             listOfContacts.append(contactDict)
-            #print(listOfContacts)
         status = 200 
         data = {"status":status,
                 "message":Config.MSG_OK_ALL_CONTACT_RET,
@@ -215,11 +206,6 @@ def get_single_contact(username):
     if myQueryContact != None:
         contactDict = myQueryContact.toDict()        
         contactDict["email"] = contactDict["email"].split("|")
-        #print("***************************************")
-        #print(type(myQueryContact))
-        #print(myQueryContact)
-        #contactDict["creationDateTime"] = myQueryContact["creationDateTime"]
-        #print((myQueryContact.__dict__)["creationDateTime"])
         status = 200
         data = {"status":status,
                 "message":Config.MSG_OK_CONTACT_RET,
@@ -233,7 +219,6 @@ def get_single_contact(username):
 @app.route('/contact/email/<email>',methods=['GET']) 
 def get_contacts_by_email(email):
     print('debug: get_contacts_by_email')
-
     # Check that input email is a valid one
     if not check_email_reg_exp(email):
         status = 400
@@ -244,7 +229,7 @@ def get_contacts_by_email(email):
     # Querying usernames by incoming emails
     myQueryEmails = Email.query.filter(Email.email == email).all()
 
-    #print(myQueryEmails)
+
     if myQueryEmails == []:
         message = Config.MSG_DATA_NOT_FOUND
         status = 404
@@ -256,7 +241,7 @@ def get_contacts_by_email(email):
     listContactsWithEmail=[]
     for queryEmail in myQueryEmails:
         username = queryEmail.username
-        #print("debug username:",username)
+
         myQueryContact = Contact.query.filter(Contact.username == username).first()
         myDictQueryContact = myQueryContact.toDict()
         myDictQueryContact["email"] = myDictQueryContact["email"].split('|')
@@ -330,8 +315,6 @@ def update_single_contact(username):
 @app.route('/contact/<username>',methods=['DELETE'])
 def delete_single_contact(username):
     print("debug: Deleting single contact")
-
-
     queryContact = Contact.query.filter(Contact.username == username).first()
     if queryContact != None:
 

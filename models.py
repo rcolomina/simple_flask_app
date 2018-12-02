@@ -1,4 +1,4 @@
-import datetime
+import datetime,time
 
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
@@ -28,23 +28,15 @@ class Contact(Base):
         self.creationDateTime = datetime.datetime.utcnow()
         
     def __repr__(self):
-        return '{}-{}-{}-{}-{}'.format(self.username,
-                                       self.email,
-                                       self.firstname,
-                                       self.surname,
+        return '{}-{}-{}-{}-{}'.format(self.username,  self.email,
+                                       self.firstname, self.surname,
                                        self.creationDateTime)
-        
     def toDict(self):
         mydict={}
         mydict["username"]  = self.username
         mydict["email"]     = self.email
         mydict["firstname"] = self.firstname
         mydict["surname"]   = self.surname
-        #print("****************")
-        #printo(self.creationDateTime)
-        #print(type(self.creationDateTime))
-
-        import time
         mydict["creationDateTime"]   = time.mktime(self.creationDateTime.timetuple())
         return mydict
         
@@ -57,15 +49,13 @@ class Email(Base):
     id       = Column(Integer, primary_key=True)
     email    = Column(String, nullable=False)
     username = Column(String, ForeignKey('contacts.id'))
-    #creationDate = Column(DateTime, default=datetime.datetime.utcnow())
     
     def __init__(self, username=None,email=None):
         self.username  = username
         self.email     = email
-        #self.creationDate = creationDate
         
     def __repr__(self):
-        return '{}-{}'.format(self.username,self.email)#,self.creationDate)
+        return '{}-{}'.format(self.username,self.email)
     
     def toDict(self):
         mydict={}
