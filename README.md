@@ -5,6 +5,7 @@ This is simple RESTfull Flask App to register contact details on its database. J
 ## Download
 
 Use git to clone this repository locally on your system.
+
 ```
 $ git clone https://github.com/rcolomina/simple_flask_app
 ```
@@ -18,6 +19,7 @@ This requires python3 using pip to install its dependencies from text fle requir
 ### Install python3 and pip
 
 You should have install these on your system
+
 ```
 $ apt-get install python3 -y
 $ apt-get install python3-pip -y
@@ -34,6 +36,7 @@ $ python3 -m venv testing_env
 ### Activate your virtual environment
 
 Once the virtual environment has been created you should activate it using source.
+
 ```
 $ source testing_env/bin/activate
 ```
@@ -41,17 +44,20 @@ $ source testing_env/bin/activate
 ### Install dependencies Using PIP
 
 Once you have actiated the environment install all its dependencies using pip/
+
 ```
 $ pip install -r requirements.txt
 ```
+
 ### Running this Flask Application
 
-Export the following environment variables to make it possible running the flask applicatioin
+Export the following environment variables to make it possible running the flask app
+
 ```
 $export FLASK_ENV=development
 $export FLASK_APP=Flask.py
 $ flask run 
-``
+```
 Alternatively there is a script in the project folder allowing to launch these three commands of above for you automatically
 
 ```
@@ -67,7 +73,6 @@ The application will run on the default Flask IP and PORT
 At this moment you should open another terminal to launch HTTP commands againts the application or used a web brower to test some API request on the URL by default. If this the first time you run the app a database will create in the project folder. Its name is defined by the python configuration file. When you close the app the data will persist on this database.
 
 Every time you run your application again the database configured will be loaded containing allr previously inseted data. It is possible to drop all tables activating a flag in the configuration file. This will reset all content of the database.
-
 
 
 # App Configuration File
@@ -155,10 +160,13 @@ To run all of these test within the previous module firstly verify you have load
 ```
 $ source testing_env/bin/activate
 ```
+
 Launch all the test inside the app testing module
+
 ```
 $ python flask_test.py
 ```
+
 Also you can also run them separately by HTTP method depending on the purpose:
 
 ```
@@ -182,6 +190,7 @@ You should launch your app first of all:
 $ ./env_flask.sh
 ```
 Now you can launch commands to it with curl. As example you can POST a contact as follows:
+
 ```
 $ ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
 ```
