@@ -1,15 +1,15 @@
-import string
-import random
+import string,random
 
 ascii_uppercase="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ascii_lowercase="abcdefghijklmnopqrstuvwxyz"
 
-def get_random_string(size=12,
-                      chars=ascii_uppercase + ascii_lowercase +string.digits):
+def get_random_string(size=12,chars= ascii_uppercase + ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
     
 def get_random_email():
-    return "".join([get_random_string(),"@",get_random_string(),'.',get_random_string(size=3)])
+    return "".join([get_random_string(),"@",
+                    get_random_string(),'.',
+                    get_random_string(size=3,chars=ascii_uppercase+ascii_lowercase)])
 
 
 def get_random_contact_json():
