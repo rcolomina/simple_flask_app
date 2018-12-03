@@ -1,24 +1,19 @@
 # Simple Flask APP to Register Contact Details
 
-This is simple RESTfull Flask App to register contact details on its database. JSON is the only interchagable format used by this app to serialize messages. 
+This is a simple RESTfull Flask App to register contact details on its backend database. JSON is the only interchagable format used by this app to serialize sent/received messages. 
 
 ## Download
 
 Use git to clone this repository locally on your system.
-
 ```
 $ git clone https://github.com/rcolomina/simple_flask_app
 ```
 
 ## Installation
 
-This app has been developed in Ubuntu 16.04. It is likely it will work in other Unix based OS without too much alterations.
+This app has been developed in Ubuntu 16.04. It is likely it will work in other Unix based OS without too much changes.
 
-This requires python3 using pip to install its dependencies from text fle requirements.txt.
-
-### Install python3 and pip
-
-You should have install these on your system
+This requires python3 and it is recommended to use pip to install its dependencies listed on requirements.txt.
 
 ```
 $ apt-get install python3 -y
@@ -26,62 +21,52 @@ $ apt-get install python3-pip -y
 ```
 
 ### Virtual Environment
-To not interfier with any other python installation it is recommended to create a virual environment inside the project folder downloaded.
 
+A virtual environment is recommended to not interfier with any other python installation in your system:
 ```
 $ cd simple_flask_app
 $ python3 -m venv testing_env
 ```
 
-### Activate your virtual environment
-
-Once the virtual environment has been created you should activate it using source.
-
+Activate this environment as follows:
 ```
 $ source testing_env/bin/activate
 ```
 
 ### Install dependencies Using PIP
 
-Once you have actiated the environment install all its dependencies using pip/
-
+Once activated the environment install all its dependencies using pip
 ```
 $ pip install -r requirements.txt
 ```
 
-### Running this Flask Application
+### Running this Flask App
 
-Export the following environment variables to make it possible running the flask app
+Before running this app you should export FLASK_ENV and FLASK_APP environment variables.
 
 ```
 $export FLASK_ENV=development
 $export FLASK_APP=Flask.py
+```
+Now you can run flask 
+```
 $ flask run 
 ```
-Alternatively there is a script in the project folder allowing to launch these three commands of above for you automatically
+Alternatively there is a script in the project folder to launch all the three previous commands of above automatically
 
 ```
 $ ./env_flask.sh
 ```
-
-The application will run on the default Flask IP and PORT
+The application will run on the default IP and PORT for Flask
 
 ```
 127.0.0.1:5000
 ```
-
-At this moment you should open another terminal to launch HTTP commands againts the application or used a web brower to test some API request on the URL by default. If this the first time you run the app a database will create in the project folder. Its name is defined by the python configuration file. When you close the app the data will persist on this database.
-
-Every time you run your application again the database configured will be loaded containing allr previously inseted data. It is possible to drop all tables activating a flag in the configuration file. This will reset all content of the database.
-
+At this moment you should open another terminal to launch HTTP commands againts the app or used a web brower to test some API request on the URL by default. If this the first time you run the app a database will create in the project folder. Its name is defined by the python configuration file. When you close the app the data will persist on this database. It is possible to drop all tables activating a flag in the configuration file. This will reset all content of the database.
 
 # App Configuration File
 
-This configuration file contains parameters such as FLASK IP and PORT, SQLALCHEMY and SQLITE name and its location.
-
-Also it is possible to configure the regular expression which will parse the emails passed within the contact details.
-
-Additionaly it is possible to configure output messages that are returned by HTTP responses. You can modify these to other language for instance.
+This configuration file contains parameters such as FLASK IP and PORT, SQLALCHEMY and SQLITE name and its location. Also it is possible to configure a regular expression parsing input emails passed within the contact details. Additionaly it is possible to configure output messages returned by HTTP responses. You might modify these to other language for instance.
 
 # Flask API Usage
 
@@ -125,14 +110,12 @@ update_single_contact  PUT      /contact/<username>
 ### Data Format
 
 JSON format is the only format used on this API. To POST and PUT JSON content Data must be prepared.  As follows you can see an example as schema for posting a contact with multiple emails.
-
 ```
 {"username":"fbolson",
 "email":["frodobolson@mordor.com","fbolson@earth.com"],
 "firstname":"Frodo",
 "surname":"BolsonCerrado"}"
 ```
-
 Notice that email admits list of emails. "email" contact can be either a string or a list of strings. The format of each email is checked againts a regular expresion specified in the configuration file having the following string:
 
 ```
@@ -145,24 +128,15 @@ This API can be tested using the python unit test module or via shell script whi
 
 ## Python Unit Test 
 
-The standard python module unittest has been used to execute HTTP operations againts the app. An independent temporal database is created for this purpose in the temporal folder.
-
-Local temporal sqlite database: 
-
+The standard python module unittest was used to execute HTTP operations againts the app. An independent temporal database is created for this purpose. 
 ```
 sqlite:////tmp/flask_unittest.db
 ```
-
-Multiple assertions over the app source code accross different HTTP methods are verified by the module 'flask_test.py' based on python unittest.
-
-To run all of these test within the previous module firstly verify you have loaded your python environment.
-
+Multiple assertions over the app source code accross different HTTP methods are verified by the module 'flask_test.py' based on python unittest. To run all of these test within the previous module firstly verify you have loaded your python environment.
 ```
 $ source testing_env/bin/activate
 ```
-
 Launch all the test inside the app testing module
-
 ```
 $ python flask_test.py
 ```
@@ -183,9 +157,7 @@ $ python -m unittest -q flask_test.FlaskTestCase.test_update_user
 
 ## CURL testing
 
-Additionaly curl library can also be used to test this app. Taylored scripts are available for this.
-
-You should launch your app first of all:
+Additionaly curl library can also be used to test this app. Taylored scripts are available for this. You should launch your app first of all:
 ```
 $ ./env_flask.sh
 ```
@@ -197,22 +169,15 @@ $ ./test_curl_post_username.sh jsmith jsmith@gmail.com John Smith
 
 ## App Data Base Model
 
-The data base model contains two related tables with a relationship one to many.
-
-A first table named 'contacts' which contains:
-
+The data base model contains two related tables with a relationship one to many. A first table named 'contacts' which contains:
 ```
 Contact(id, username, email, firstname, surname)
 ```
-
-The field 'username' is the primary key. Fields 'email', 'firstname' and 'surname' were defined as non nullable.
-
-A second table named 'emails' which is a child from the first one contains:
+The field 'username' is the primary key. Fields 'email', 'firstname' and 'surname' were defined as non nullable. A second table named 'emails' which is a child from the first one contains:
 
 ```
 Email(id, username, email)
 ```
-
 The filed 'username' in 'emails' table is a foreigh key of 'contacts'.
 
 ## SQL ALchemy API and Sqlite3
@@ -259,18 +224,14 @@ $ cd simple_flask_app
 $ source testing_env/bin/activate
 $ celery -A tasks_periodic beat
 ```
-
-At this point you should have messages on the first terminal (worker init) without errors. You can see tasks have been received by the worker from the beat scheduler. There are fore posting and deleting contacts as explained above
-
+At this point you should have messages on the first terminal (worker init) without errors. This terminal will show that tasks have been received by the worker from the beat scheduler. These are posting and deleting operations over contact details as explained above. Traces of these as follows:
 ```
 [2018-12-02 23:12:16,919: INFO/MainProcess] Received task: tasks_periodic.delete_older_entries[fc9706b6-dc5d-49d5-bcd1-5db54bb1e5a3]  
 ...
 [2018-12-02 23:12:16,962: INFO/ForkPoolWorker-1] Task tasks_periodic.post_random_contact[a9628275-21cc-4619-8280-16cc6e6ca8b4] succeeded in 0.04553862699685851s: <Response streamed [200 OK]>
 
 ```
-Notice that tasks_periodic.delete_older_entires has a return [200 OK] in response from Flask app.
-
-Simimar traces are shown when posting a random contact
+Notice that the ** tasks_periodic.delete_older_entires ** has a return [200 OK] in response from Flask app. Similarly traces are shown when posting random contacts from celery:
 ```
 [2018-12-02 23:12:50,410: INFO/MainProcess] Received task: tasks_periodic.post_random_contact[55cbb8fd-fb1c-4889-93e7-6b299198d390]
 [2018-12-02 23:12:50,460: INFO/ForkPoolWorker-3] Task tasks_periodic.delete_older_entries[919cd7bd-4c68-46d8-84e9-265492061072] succeeded in 0.06035223400249379s: <Response streamed [200 OK]>
