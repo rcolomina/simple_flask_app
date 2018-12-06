@@ -1,16 +1,25 @@
 import datetime,time
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, func
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base,declared_attr
 
 from sqlalchemy.types import DateTime
 
+# Common fields
+class MixIn(object):
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()    
+    id = Column(Integer, primary_key=True)
+    date_created  = Column(DateTime, default=func.current_timestamp())
+    date_modified = Column(DateTime, default=func.current_timestamp())
+
 Base = declarative_base()
 
-class Contact(Base):
+class Contact(Base,MixIn):
     __tablename__ = 'contacts'
-    id        = Column(Integer, primary_key=True)
+    #id        = Column(Integer, primary_key=True)
     username  = Column(String, unique=True)
     email     = Column(String, nullable=False)
     firstname = Column(String, nullable=False)
@@ -44,9 +53,9 @@ class Contact(Base):
         import json
         return json.dumps(self.toDict())
 
-class Email(Base):
+class Email(Base,MixIn):
     __tablename__ = 'emails'
-    id       = Column(Integer, primary_key=True)
+    #id       = Column(Integer, primary_key=True)
     email    = Column(String, nullable=False)
     username = Column(String, ForeignKey('contacts.id'))
     
